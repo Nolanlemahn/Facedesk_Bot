@@ -14,6 +14,25 @@ namespace FaceDesk_Bot
 {
   public static class LocalExtensions
   {
+    public static string WindowsToIana(string windowsZoneId)
+    {
+      // Avoid UTC being mapped to Etc/GMT, which is the mapping in CLDR
+      if (windowsZoneId == "UTC")
+      {
+        return "Etc/UTC";
+      }
+      var source = NodaTime.TimeZones.TzdbDateTimeZoneSource.Default;
+      string result = null;
+      // If there's no such mapping, result will be null.
+      source.WindowsMapping.PrimaryMapping.TryGetValue(windowsZoneId, out result);
+      // Canonicalize
+      if (result != null)
+      {
+        result = source.CanonicalIdMap[result];
+      }
+      return result;
+    }
+
     public static async Task<bool> IsOwner(this SocketCommandContext context)
     {
       var application = await context.Client.GetApplicationInfoAsync();

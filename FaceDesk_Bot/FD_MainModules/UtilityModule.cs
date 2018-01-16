@@ -7,6 +7,7 @@ using Discord;
 using Discord.Commands;
 using System.Drawing;
 using Discord.Rest;
+using TimeZoneConverter;
 
 namespace FaceDesk_Bot.FD_MainModules
 {
@@ -18,7 +19,8 @@ namespace FaceDesk_Bot.FD_MainModules
       { "PST", "Pacific Standard Time" },
       { "CST", "Central Standard Time" },
       { "CET", "Central European Standard Time" },
-      { "AKST", "Alaskan Standard Time" }
+      { "AKST", "Alaskan Standard Time" },
+      { "HST", "Hawaiian Standard Time" }
     };
 
     public static List<string> BallResponses = new List<string>()
@@ -43,10 +45,24 @@ namespace FaceDesk_Bot.FD_MainModules
       "My sources say no [-]",
       "Outlook not so good [-]",
       "Very doubtful [-]",
+
+      "Don't. Wait, you know what? Just go ahead [+]",
+      "Do it if you dare [+]",
       "Swear fucking loudly and ask again [?]",
       "No data. Ask Nolan [?]",
+      "I'm busy. Ping a Hall Monitor [?]",
+      "Depends on your luck [?]",
+      "Consider a different path [?]",
+      "How about you ask a different question [?]",
+      "Ooh! Roll for initiative [?]",
       "Just kill it. With fire [!]",
-      "You’re a disappointment for even asking [!]"
+      "You’re a disappointment for even asking [!]",
+      "Shooka demands sacrifice [!]",
+      "Don't even dream about it [-]",
+      "Not in this lifetime [-]",
+      "Impending disaster [-]",
+      "Just don't [-]",
+      "Don't hold your breath [-]",
     };
   }
 
@@ -56,8 +72,21 @@ namespace FaceDesk_Bot.FD_MainModules
     [Summary("**Owner only**. Edits a message.")]
     public async Task Medit(ulong msgid, [Remainder] string newmsg)
     {
+      Task<bool> result = this.Context.IsOwner();
+      if (!result.Result) return;
+
       var message = (RestUserMessage) await this.Context.Channel.GetMessageAsync(msgid);
       await message.ModifyAsync(msg => msg.Content = newmsg);
+    }
+
+    [Command("gg")]
+    [Summary("**Owner only**. Kills the bot.")]
+    public async Task Gg()
+    {
+      Task<bool> result = this.Context.IsOwner();
+      if (!result.Result) return;
+
+      Environment.Exit(0);
     }
 
     private Random ballRandom = new Random();
@@ -65,10 +94,15 @@ namespace FaceDesk_Bot.FD_MainModules
     [Summary("Shakes the 8ball.")]
     public async Task BallShake()
     {
-      string rand = LookupData.BallResponses[ballRandom.Next(LookupData.BallResponses.Count)];
+      string rand =
+        // Get a random 8ball message in advance
+        LookupData.BallResponses[ballRandom.Next(LookupData.BallResponses.Count)];
 
+        // Setup the initial message
       var message = await this.Context.Channel.SendMessageAsync("*shooka shooka...*");
+        // Pretend to think
       await Task.Delay(1000);
+        // Replace the initial message (edit) with the 8ball message
       await message.ModifyAsync(msg => msg.Content = rand);
     }
 
@@ -79,7 +113,7 @@ namespace FaceDesk_Bot.FD_MainModules
       [Summary("The timezone of the original timezone")] string origzone,
       [Remainder] [Summary("Other timezones, separated by commas")] string zones)
     {
-      try
+      //try
       {
         DateTime result;
         if (!DateTime.TryParse(time, out result))
@@ -89,10 +123,31 @@ namespace FaceDesk_Bot.FD_MainModules
 
         string[] aZones = zones.Split(',');
         List<TimeZoneInfo> tzis = new List<TimeZoneInfo>();
-        TimeZoneInfo otzi = TimeZoneInfo.FindSystemTimeZoneById(LookupData.TimeAbs[origzone]);
+        TimeZoneInfo otzi = null;
+        if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+        {
+          string stz = LocalExtensions.WindowsToIana(LookupData.TimeAbs[origzone]);
+          otzi = TimeZoneInfo.FindSystemTimeZoneById(stz);
+        }
+        else
+        {
+          otzi = TimeZoneInfo.FindSystemTimeZoneById(LookupData.TimeAbs[origzone]);
+        }
+
         foreach (var zone in aZones)
         {
-          tzis.Add(TimeZoneInfo.FindSystemTimeZoneById(LookupData.TimeAbs[zone]));
+          string tz = LookupData.TimeAbs[zone];
+          if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+          {
+            tz = LocalExtensions.WindowsToIana(tz);
+            TimeZoneInfo tzi = TimeZoneInfo.FindSystemTimeZoneById(tz);
+            tzis.Add(tzi);
+          }
+          else
+          {
+            TimeZoneInfo tzi = TimeZoneInfo.FindSystemTimeZoneById(tz);
+            tzis.Add(tzi);
+          }
         }
 
         DateTime utcTime = TimeZoneInfo.ConvertTime(result, otzi, TimeZoneInfo.Utc);
@@ -118,10 +173,6 @@ namespace FaceDesk_Bot.FD_MainModules
 
         await this.Context.Channel.SendMessageAsync(msg + "```");
       }
-      catch (Exception e)
-      {
-        await this.Context.Channel.SendMessageAsync("???");
-      }
     }
 
     [Command("color")]
@@ -138,14 +189,13 @@ namespace FaceDesk_Bot.FD_MainModules
         {
           for (int x = 0; x < 25; ++x)
           {
-            int offset = y * 5 * 4 + x * 4;
             bmp.SetPixel(x, y, System.Drawing.Color.FromArgb(red, green, blue));
           }
         }
         bmp.Save("Temp.png");
         await this.Context.Channel.SendFileAsync("Temp.png");
       }
-      catch (Exception e)
+      catch (Exception)
       {
         await this.Context.Channel.SendMessageAsync("???");
       }

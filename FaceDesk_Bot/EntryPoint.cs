@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -55,6 +57,7 @@ namespace FaceDesk_Bot
 
       // Grab the token
       string token = System.IO.File.ReadAllText(Path.Combine(assemblyFolder, "nogit_token.txt"));
+      Console.WriteLine("Key read.");
 
       Client = new DiscordSocketClient();
       MainCommandService = new CommandService();
@@ -63,12 +66,17 @@ namespace FaceDesk_Bot
         .AddSingleton(Client)
         .AddSingleton(MainCommandService)
         .BuildServiceProvider();
+      Console.WriteLine("Services started.");
 
       await InstallCommandsAsync();
+      Console.WriteLine("Commands installed.");
 
       await Client.LoginAsync(TokenType.Bot, token);
+      Console.WriteLine("Logged in.");
+
       await Client.StartAsync();
-      
+      Console.WriteLine("Client started.");
+
       await Client.SetGameAsync("dead");
 
       await Task.Delay(-1);
@@ -78,11 +86,12 @@ namespace FaceDesk_Bot
     {
       Client.ReactionAdded += HandleReactionAsync;
 
+      Client.MessageReceived += HandleMessengerAsync;
       Client.MessageReceived += HandleCommandAsync;
 
       await MainCommandService.AddModuleAsync(typeof(FD_MainModules.UtilityModule));
 
-      await MainCommandService.AddModulesAsync(Assembly.GetEntryAssembly());
+      //await MainCommandService.AddModulesAsync(Assembly.GetEntryAssembly());
     }
 
     private PreprocessType ShouldPreprocessMessage(SocketUserMessage msg)
@@ -99,6 +108,27 @@ namespace FaceDesk_Bot
     {
       Console.WriteLine("Got a reaction.");
       return;
+    }
+
+    private async Task HandleMessengerAsync(SocketMessage messageParam)
+    {
+      var message = messageParam as SocketUserMessage;
+      if (message == null) return;
+      var context = new SocketCommandContext(Client, message);
+
+      List<ulong> Chronos = new List<ulong>()
+      {
+        118492595365085187,
+        193065794781839360,
+        177717393689149440
+      };
+
+      if (Chronos.Contains(message.Author.Id)
+        && context.Guild.Id == 372226412901564417)
+      {
+        GuildEmote seg = context.Guild.Emotes.FirstOrDefault(em => em.ToString() == "<:chronojail:392440043974819862>");
+        await message.AddReactionAsync(seg, null);
+      }
     }
 
     private async Task HandleCommandAsync(SocketMessage messageParam)
