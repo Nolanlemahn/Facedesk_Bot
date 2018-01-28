@@ -17,13 +17,12 @@ namespace FaceDesk_Bot.FD_MainModules
   {
     public static Dictionary<string, string> TimeAbs = new Dictionary<string, string>()
     {
-      { "EST", "Eastern Standard Time" },
-      { "PST", "Pacific Standard Time" },
-      { "CST", "Central Standard Time" },
-      { "CET", "Central European Standard Time" },
       { "AKST", "Alaskan Standard Time" },
-      { "HST", "Hawaiian Standard Time" },
-      { "GMT", "Greenwich Standard Time" }
+      { "CET", "Central European Standard Time" },
+      { "CST", "Central Standard Time" },
+      { "EST", "Eastern Standard Time" },
+      { "GMT", "Greenwich Standard Time" },
+      { "PST", "Pacific Standard Time" },
     };
 
     public static List<string> BallResponses = new List<string>()
@@ -126,7 +125,7 @@ namespace FaceDesk_Bot.FD_MainModules
     {
       Task<bool> result = this.Context.IsOwner();
       if (!result.Result) return;
-
+      await this.Context.Channel.SendMessageAsync("Bye!");
       Environment.Exit(0);
     }
 
@@ -199,6 +198,18 @@ namespace FaceDesk_Bot.FD_MainModules
           await this.Context.Channel.SendMessageAsync("???");
         }
 
+        if (zones.Equals("REZ"))
+        {
+          zones = "";
+          foreach (KeyValuePair<string, string> timePair in LookupData.TimeAbs)
+          {
+            zones += timePair.Key + ",";
+          }
+          zones = zones.Replace(origzone + ",", "");
+          zones = zones.TrimEnd(',');
+        }
+        Console.WriteLine(zones);
+
         string[] aZones = zones.Split(',');
         List<TimeZoneInfo> tzis = new List<TimeZoneInfo>();
         TimeZoneInfo otzi = null;
@@ -236,7 +247,7 @@ namespace FaceDesk_Bot.FD_MainModules
         foreach (TimeZoneInfo tzi in tzis)
         {
           DateTime newTime = TimeZoneInfo.ConvertTime(utcTime, TimeZoneInfo.Utc, tzi);
-          msg += ("- " + aZones[i] + ": " + newTime.ToString("h:mm tt") + " ");
+          msg += ("- " + aZones[i] + " (" + LookupData.TimeAbs[aZones[i]] + "):\n    " + newTime.ToString("h:mm tt") + " ");
           if ((newTime.Date - result.Date).Days >= 0.99)
           {
             msg += "[next day]";
@@ -245,7 +256,7 @@ namespace FaceDesk_Bot.FD_MainModules
           {
             msg += "[previous day]";
           }
-          msg += "\n";
+          msg += "\n\n";
           i++;
         }
 
