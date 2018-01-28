@@ -7,6 +7,7 @@ using Discord;
 using Discord.Commands;
 using System.Drawing;
 using Discord.Rest;
+using Discord.WebSocket;
 using TimeZoneConverter;
 
 namespace FaceDesk_Bot.FD_MainModules
@@ -20,7 +21,8 @@ namespace FaceDesk_Bot.FD_MainModules
       { "CST", "Central Standard Time" },
       { "CET", "Central European Standard Time" },
       { "AKST", "Alaskan Standard Time" },
-      { "HST", "Hawaiian Standard Time" }
+      { "HST", "Hawaiian Standard Time" },
+      { "GMT", "Greenwich Standard Time" }
     };
 
     public static List<string> BallResponses = new List<string>()
@@ -87,6 +89,43 @@ namespace FaceDesk_Bot.FD_MainModules
       if (!result.Result) return;
 
       Environment.Exit(0);
+    }
+
+    [Command("cleanup")]
+    [Summary("**Owner only**.")]
+    public async Task Cleanup()
+    {
+      if (this.Context.IsOwner().Result)
+      {
+        List<SocketGuildUser> kickables = new List<SocketGuildUser>();
+        foreach (SocketGuildUser user in this.Context.Guild.Users)
+        {
+          Console.WriteLine(user.Username + "#" + user.DiscriminatorValue +
+            " has " + user.Roles.Count + " roles.");
+
+          if (user.Roles.Count <= 1)
+          {
+            kickables.Add(user);
+          }
+        }
+
+        foreach (SocketGuildUser kickable in kickables)
+        {
+          await kickable.KickAsync();
+        }
+      }
+    }
+
+    //--
+
+    [Command("prune")]
+    [Summary("Deletes a specified amount of messages")]
+    [RequireBotPermission(GuildPermission.ManageMessages)]
+    [RequireUserPermission(GuildPermission.ManageMessages)]
+    public async Task Prune(int delnum)
+    {
+      var items = await Context.Channel.GetMessagesAsync(delnum + 1).Flatten();
+      await Context.Channel.DeleteMessagesAsync(items);
     }
 
     private Random ballRandom = new Random();
