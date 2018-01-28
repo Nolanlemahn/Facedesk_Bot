@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using System.Drawing;
+using System.Linq;
 using Discord.Rest;
 using Discord.WebSocket;
 using TimeZoneConverter;
@@ -70,9 +71,47 @@ namespace FaceDesk_Bot.FD_MainModules
 
   class UtilityModule : ModuleBase<SocketCommandContext>
   {
+    [Command("allhelp")]
+    [Summary("Prints everything this bot can do.")]
+    public async Task AllHelp()
+    {
+      var ebh = new EmbedBuilder();
+      ebh.WithTitle("FaceDesk_Bot Command Help");
+      ebh.WithDescription("Here are all of the commands the bot is capable of doing.\n\n");
+
+      List<CommandInfo> commandCopy = EntryPoint.MainCommandService.Commands.OrderBy(c => c.Name).ToList();
+      foreach (var command in commandCopy)
+      {
+        string realSummary = "";
+        int paramCounter = 1;
+        foreach (var parameter in command.Parameters)
+        {
+          realSummary += ("param" + paramCounter + ": ");
+          realSummary += (parameter.Summary + "\n");
+          paramCounter++;
+        }
+        realSummary += "`";
+        foreach (var alias in command.Aliases)
+        {
+          realSummary += "[!" + alias + "] ";
+        }
+        for (int i = 1; i < paramCounter; i++)
+        {
+          realSummary += "+ param" + i + " ";
+        }
+        realSummary += ("`\n*" + command.Summary + "*" + "\n\n");
+
+        ebh.AddField(command.Name, realSummary);
+      }
+
+      await this.Context.DebugPublicReleasePrivate("", false, ebh);
+    }
+
     [Command("medit")]
-    [Summary("**Owner only**. Edits a message.")]
-    public async Task Medit(ulong msgid, [Remainder] string newmsg)
+    [Summary("**Owner only**. Edits a message for which the bot is the author.")]
+    public async Task Medit(
+      [Summary("The message id")] ulong msgid,
+      [Summary("The new message text")] [Remainder] string newmsg)
     {
       Task<bool> result = this.Context.IsOwner();
       if (!result.Result) return;
@@ -92,7 +131,7 @@ namespace FaceDesk_Bot.FD_MainModules
     }
 
     [Command("cleanup")]
-    [Summary("**Owner only**.")]
+    [Summary("**Owner only**. Don't ask.")]
     public async Task Cleanup()
     {
       if (this.Context.IsOwner().Result)
@@ -119,10 +158,10 @@ namespace FaceDesk_Bot.FD_MainModules
     //--
 
     [Command("prune")]
-    [Summary("Deletes a specified amount of messages")]
+    [Summary("Deletes a specified amount of messages in the channel.")]
     [RequireBotPermission(GuildPermission.ManageMessages)]
     [RequireUserPermission(GuildPermission.ManageMessages)]
-    public async Task Prune(int delnum)
+    public async Task Prune([Summary("Number of messages to delete.")] int delnum)
     {
       var items = await Context.Channel.GetMessagesAsync(delnum + 1).Flatten();
       await Context.Channel.DeleteMessagesAsync(items);
@@ -215,8 +254,8 @@ namespace FaceDesk_Bot.FD_MainModules
     }
 
     [Command("color")]
-    [Summary("Gets a color out.")]
-    public async Task Color([Remainder] [Summary("The color desired")] string input)
+    [Summary("Displays a color.")]
+    public async Task Color([Remainder] [Summary("The color desired, as a hexcode")] string input)
     {
       try
       {
