@@ -294,9 +294,9 @@ namespace FaceDesk_Bot.FD_MainModules
         bmp.Save("Temp.png");
         await this.Context.Channel.SendFileAsync("Temp.png");
       }
-      catch (Exception)
+      catch (Exception e)
       {
-        await this.Context.Channel.SendMessageAsync("???");
+        await this.Context.Channel.SendMessageAsync("Error: " + e.Message);
       }
     }
   }
