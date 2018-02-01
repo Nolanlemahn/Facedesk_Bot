@@ -115,6 +115,9 @@ namespace FaceDesk_Bot.FD_MainModules
       Task<bool> result = this.Context.IsOwner();
       if (!result.Result) return;
 
+      if(this.Context.Guild.GetUser(EntryPoint.Client.CurrentUser.Id).GetPermissions(this.Context.Channel as IGuildChannel).ManageMessages)
+        await this.Context.Message.DeleteAsync();
+
       var message = (RestUserMessage) await this.Context.Channel.GetMessageAsync(msgid);
       await message.ModifyAsync(msg => msg.Content = newmsg);
     }
@@ -125,7 +128,7 @@ namespace FaceDesk_Bot.FD_MainModules
     {
       Task<bool> result = this.Context.IsOwner();
       if (!result.Result) return;
-      await this.Context.Channel.SendMessageAsync("Bye!");
+      await this.Context.Channel.SendMessageAsync("Bye! 👋");
       Environment.Exit(0);
     }
 
@@ -163,7 +166,7 @@ namespace FaceDesk_Bot.FD_MainModules
     public async Task Prune([Summary("Number of messages to delete.")] int delnum)
     {
       var items = await Context.Channel.GetMessagesAsync(delnum + 1).Flatten();
-      await Context.Channel.DeleteMessagesAsync(items);
+      await this.Context.Channel.DeleteMessagesAsync(items);
     }
 
     private Random ballRandom = new Random();
@@ -241,26 +244,33 @@ namespace FaceDesk_Bot.FD_MainModules
 
         DateTime utcTime = TimeZoneInfo.ConvertTime(result, otzi, TimeZoneInfo.Utc);
 
-        string msg = result.ToString("h:mm tt") + " in " + otzi.StandardName + " converts to...\n```";
+        var ebh = new EmbedBuilder();
+        ebh.WithTitle(result.ToString("h:mm tt") + " in " + otzi.StandardName + " conversions\n");
+
+        string msg = "";
 
         int i = 0;
         foreach (TimeZoneInfo tzi in tzis)
         {
           DateTime newTime = TimeZoneInfo.ConvertTime(utcTime, TimeZoneInfo.Utc, tzi);
-          msg += ("- " + aZones[i] + " (" + LookupData.TimeAbs[aZones[i]] + "):\n    " + newTime.ToString("h:mm tt") + " ");
+          string head = "**" + aZones[i] + "** (" + LookupData.TimeAbs[aZones[i]] + ")";
+          string body = "__" + newTime.ToString("h: mm tt") + "__";
+  
           if ((newTime.Date - result.Date).Days >= 0.99)
           {
-            msg += "[next day]";
+            body += " [next day]";
           }
           if ((newTime.Date - result.Date).Days <= -0.99)
           {
-            msg += "[previous day]";
+            body += " [previous day]";
           }
-          msg += "\n\n";
+          body += "\n\n";
           i++;
+
+          ebh.AddField(head, body);
         }
 
-        await this.Context.Channel.SendMessageAsync(msg + "```");
+        await this.Context.Channel.SendMessageAsync("", false, ebh);
       }
     }
 
