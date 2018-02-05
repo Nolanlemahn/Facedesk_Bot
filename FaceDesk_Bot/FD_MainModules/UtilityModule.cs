@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using Discord.Rest;
 using Discord.WebSocket;
@@ -293,6 +294,9 @@ namespace FaceDesk_Bot.FD_MainModules
         }
         bmp.Save("Temp.png");
         await this.Context.Channel.SendFileAsync("Temp.png");
+        await Task.Factory.StartNew(
+          path => File.Delete((string)path), "Temp.png"
+          );
       }
       catch (Exception e)
       {
