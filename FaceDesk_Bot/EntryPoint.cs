@@ -13,6 +13,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 
 using FaceDesk_Bot.FD_MainModules;
+using FaceDesk_Bot.Permissions;
 
 namespace FaceDesk_Bot
 {
@@ -33,6 +34,7 @@ namespace FaceDesk_Bot
        false;
 #endif
 
+    public static string RunningFolder;
     public static CommandService MainCommandService;
     public static DiscordSocketClient Client;
     public static SqliteConnection Connection;
@@ -44,8 +46,8 @@ namespace FaceDesk_Bot
     public async Task StartAsync()
     {
       // Find where we are executing from
-      string assemblyFolder = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
-      Console.WriteLine(assemblyFolder);
+      RunningFolder = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+      Console.WriteLine(RunningFolder);
 
       // Database!
       EntryPoint.Connection = new SqliteConnection("" + 
@@ -56,7 +58,7 @@ namespace FaceDesk_Bot
       //EntryPoint.Connection.Open();
 
       // Grab the token
-      string token = System.IO.File.ReadAllText(Path.Combine(assemblyFolder, "nogit_token.txt"));
+      string token = System.IO.File.ReadAllText(Path.Combine(RunningFolder, "nogit_token.txt"));
       Console.WriteLine("Key read.");
 
       Client = new DiscordSocketClient();
@@ -74,6 +76,9 @@ namespace FaceDesk_Bot
       await Client.LoginAsync(TokenType.Bot, token);
       Console.WriteLine("Logged in.");
 
+      SimplePermissions.LoadOwners();
+      Console.WriteLine("Permissions loaded.");
+
       await Client.StartAsync();
       Console.WriteLine("Client started.");
 
@@ -86,10 +91,11 @@ namespace FaceDesk_Bot
     {
       Client.ReactionAdded += HandleReactionAsync;
 
-      Client.MessageReceived += HandleMessengerAsync;
+      Client.MessageReceived += AutoReact.AutoReactAsync;
       Client.MessageReceived += HandleCommandAsync;
 
       await MainCommandService.AddModuleAsync(typeof(FD_MainModules.UtilityModule));
+      await MainCommandService.AddModuleAsync(typeof(FD_MainModules.FunModule));
 
       //await MainCommandService.AddModulesAsync(Assembly.GetEntryAssembly());
     }
@@ -109,28 +115,8 @@ namespace FaceDesk_Bot
 #pragma warning restore 1998
     {
       Console.WriteLine("Got a reaction.");
+      Console.WriteLine(reaction.Emote.ToString());
       return;
-    }
-
-    private async Task HandleMessengerAsync(SocketMessage messageParam)
-    {
-      var message = messageParam as SocketUserMessage;
-      if (message == null) return;
-      var context = new SocketCommandContext(Client, message);
-
-      List<ulong> Chronos = new List<ulong>()
-      {
-        118492595365085187,
-        193065794781839360,
-        177717393689149440
-      };
-
-      if (Chronos.Contains(message.Author.Id)
-        && context.Guild.Id == 372226412901564417)
-      {
-        GuildEmote seg = context.Guild.Emotes.FirstOrDefault(em => em.ToString() == "<:chronojail:392440043974819862>");
-        await message.AddReactionAsync(seg, null);
-      }
     }
 
     private async Task HandleCommandAsync(SocketMessage messageParam)

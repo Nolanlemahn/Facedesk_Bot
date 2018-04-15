@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,6 +10,7 @@ using System.Xml.Serialization;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using FaceDesk_Bot.Permissions;
 
 namespace FaceDesk_Bot
 {
@@ -36,7 +38,8 @@ namespace FaceDesk_Bot
     public static async Task<bool> IsOwner(this SocketCommandContext context)
     {
       var application = await context.Client.GetApplicationInfoAsync();
-      return (context.User.Id == application.Owner.Id);
+      return (context.User.Id == application.Owner.Id ||
+        SimplePermissions.Owners.Contains(context.User.Id));
     }
 
     public static string Mention(this ISocketMessageChannel channel)
