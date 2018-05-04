@@ -50,10 +50,13 @@ namespace FaceDesk_Bot.FD_MainModules
     {
       try
       {
-        var fileStream = new FileStream(Path.Combine(Directory.GetCurrentDirectory(), bestGuessAtFileName), FileMode.Open);
+        string imgpath = Path.Combine(Directory.GetCurrentDirectory(), bestGuessAtFileName);
+        var fileStream = new FileStream(imgpath, FileMode.Open);
         var image = new Image(fileStream);
         await Context.Client.CurrentUser.ModifyAsync(u => u.Avatar = image);
-        File.Delete(Directory.GetCurrentDirectory() + bestGuessAtFileName);
+        image.Stream.Close();
+        fileStream.Close();
+        File.Delete(imgpath);
       }
       catch (Exception e)
       {
