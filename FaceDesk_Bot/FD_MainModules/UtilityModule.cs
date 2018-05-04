@@ -9,10 +9,12 @@ using Discord.Commands;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net;
 using Discord.Rest;
 using Discord.WebSocket;
 using FaceDesk_Bot.Permissions;
 using TimeZoneConverter;
+using Image = Discord.Image;
 
 namespace FaceDesk_Bot.FD_MainModules
 {
@@ -31,6 +33,34 @@ namespace FaceDesk_Bot.FD_MainModules
 
   class UtilityModule : ModuleBase<SocketCommandContext>
   {
+    [Command("makeup")]
+    [Summary("**Owner only**. Changes the profile picture.")]
+    public async Task Makeup(
+      [Summary("URL to image")] [Remainder] string URLtoimg)
+    {
+      string bestGuessAtFileName = (URLtoimg.Split('/').Last());
+      using (var client = new WebClient())
+      {
+        client.DownloadFileCompleted += async (sender, e) => await this.postMakeup(bestGuessAtFileName, this.Context);
+        client.DownloadFileAsync(new Uri(URLtoimg), bestGuessAtFileName);
+      }
+    }
+
+    private async Task postMakeup(string bestGuessAtFileName, SocketCommandContext context)
+    {
+      try
+      {
+        var fileStream = new FileStream(Path.Combine(Directory.GetCurrentDirectory(), bestGuessAtFileName), FileMode.Open);
+        var image = new Image(fileStream);
+        await Context.Client.CurrentUser.ModifyAsync(u => u.Avatar = image);
+        File.Delete(Directory.GetCurrentDirectory() + bestGuessAtFileName);
+      }
+      catch (Exception e)
+      {
+        await context.Channel.SendMessageAsync("Failed to change avatar: " + e.Message);
+      }
+    }
+
     [Command("memory")]
     [Summary("Shows RAM usage.")]
     public async Task Memory()
