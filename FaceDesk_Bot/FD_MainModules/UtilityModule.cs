@@ -98,7 +98,7 @@ namespace FaceDesk_Bot.FD_MainModules
     {
       Task<bool> result = this.Context.IsOwner();
       if (!result.Result) return;
-      await this.Context.Channel.SendMessageAsync("Bye! 👋");
+      await this.Context.Channel.SendMessageAsync("😭... Okay, bye for now! 👋");
       Environment.Exit(0);
     }
 

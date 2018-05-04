@@ -111,12 +111,10 @@ namespace FaceDesk_Bot
       return PreprocessType.NO_PREPROC;
     }
 
-#pragma warning disable 1998
     private async Task HandleReactionAsync(Cacheable<IUserMessage, ulong> cacheable, ISocketMessageChannel socketMessageChannel, SocketReaction reaction)
-#pragma warning restore 1998
     {
-      Console.WriteLine("Got a reaction.");
-      Console.WriteLine(reaction.Emote.ToString());
+      //TODO: switch
+      //Console.WriteLine(reaction.Emote.ToString());
       return;
     }
 
