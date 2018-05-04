@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using System.Threading.Tasks;
+using System.Diagnostics;
 using Discord;
 using Discord.Commands;
 using System.Drawing;
@@ -30,6 +31,15 @@ namespace FaceDesk_Bot.FD_MainModules
 
   class UtilityModule : ModuleBase<SocketCommandContext>
   {
+    [Command("memory")]
+    [Summary("Shows RAM usage.")]
+    public async Task Memory()
+    {
+      var proc = Process.GetCurrentProcess();
+      var mem = proc.WorkingSet64;
+      await this.Context.Channel.SendMessageAsync(String.Format("🖥️ Using {0:n3} MB", mem / 1024.0 / 1024.0));
+    }
+
     [Command("allhelp")]
     [Summary("Prints everything this bot can do.")]
     public async Task AllHelp()

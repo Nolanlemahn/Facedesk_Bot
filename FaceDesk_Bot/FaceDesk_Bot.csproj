@@ -12,6 +12,7 @@
     <PackageReference Include="Microsoft.Data.Sqlite" Version="1.1.0" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
     <PackageReference Include="NodaTime" Version="2.3.0-beta01" />
+    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="4.5.0-preview2-26406-04" />
     <PackageReference Include="System.Xml.ReaderWriter" Version="4.3.0" />
     <PackageReference Include="System.Xml.XDocument" Version="4.3.0" />
     <PackageReference Include="System.Xml.XmlSerializer" Version="4.3.0" />
