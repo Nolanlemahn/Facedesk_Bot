@@ -39,6 +39,7 @@ namespace FaceDesk_Bot
     public static DiscordSocketClient Client;
     public static SqliteConnection Connection;
     public static bool Lockdown = false;
+    public static char Prefix = '^';
     private IServiceProvider _services;
 
     private static void Main(string[] args) => new EntryPoint().StartAsync().GetAwaiter().GetResult();
@@ -123,19 +124,21 @@ namespace FaceDesk_Bot
     {
       var message = messageParam as SocketUserMessage;
       if (message == null) return;
+      var context = new SocketCommandContext(Client, message);
 
       int argPos = 0;
 
+      SocketGuildUser me = context.Guild.Users.Where(x => x.Id == Client.CurrentUser.Id).ToList()[0];
 
       PreprocessType runPreprocess = ShouldPreprocessMessage(message);
       if (runPreprocess == PreprocessType.NO_PREPROC &&
         !(
-          message.HasCharPrefix('^', ref argPos) ||
+          (me != null && message.HasStringPrefix(me.Nickname + ", ", ref argPos)) ||
+          message.HasCharPrefix(EntryPoint.Prefix, ref argPos) ||
           message.HasMentionPrefix(Client.CurrentUser, ref argPos)
         )
       ) return;
 
-      var context = new SocketCommandContext(Client, message);
       RestApplication application = await context.Client.GetApplicationInfoAsync();
 
       if (runPreprocess != PreprocessType.NO_PREPROC)

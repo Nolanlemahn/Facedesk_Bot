@@ -52,7 +52,7 @@ namespace FaceDesk_Bot.FD_MainModules
         realSummary += "`";
         foreach (var alias in command.Aliases)
         {
-          realSummary += "[!" + alias + "] ";
+          realSummary += ('[' + EntryPoint.Prefix + alias + "] ");
         }
         for (int i = 1; i < paramCounter; i++)
         {
@@ -96,8 +96,7 @@ namespace FaceDesk_Bot.FD_MainModules
     [Summary("**Owner only**. DMs invoker with list of owners.")]
     public async Task Owners()
     {
-      Task<bool> result = this.Context.IsOwner();
-      if (!result.Result) return;
+      if (!this.Context.IsOwner().Result) return;
 
       List<ulong> owners = SimplePermissions.Owners;
 
