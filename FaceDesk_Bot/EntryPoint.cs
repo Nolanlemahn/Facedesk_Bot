@@ -97,6 +97,7 @@ namespace FaceDesk_Bot
 
       await MainCommandService.AddModuleAsync(typeof(FD_MainModules.UtilityModule));
       await MainCommandService.AddModuleAsync(typeof(FD_MainModules.FunModule));
+      await MainCommandService.AddModuleAsync(typeof(Permissions.SimplePermissionsModule));
 
       //await MainCommandService.AddModulesAsync(Assembly.GetEntryAssembly());
     }
