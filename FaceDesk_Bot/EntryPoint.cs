@@ -92,7 +92,7 @@ namespace FaceDesk_Bot
     {
       Client.ReactionAdded += HandleReactionAsync;
 
-      Client.MessageReceived += AutoReact.AutoReactAsync;
+      //Client.MessageReceived += AutoReact.AutoReactAsync;
       Client.MessageReceived += HandleCommandAsync;
 
       await MainCommandService.AddModuleAsync(typeof(FD_MainModules.UtilityModule));

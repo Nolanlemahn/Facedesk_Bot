@@ -73,6 +73,20 @@ namespace FaceDesk_Bot.FD_MainModules
       await this.Context.Channel.SendMessageAsync(String.Format("🖥️ Using {0:n3} MB", mem / 1024.0 / 1024.0));
     }
 
+    [Command("vkick")]
+    [Summary("**Requires Move Members**. Moves target to the designated AFK channel.")]
+    [RequireBotPermission(GuildPermission.MoveMembers)]
+    [RequireUserPermission(GuildPermission.MoveMembers)]
+    public async Task VoiceKick(SocketUser user = null)
+    {
+      SocketVoiceChannel afkChannel = this.Context.Guild.AFKChannel;
+      if (afkChannel != null)
+      {
+        var guildUser = user as IGuildUser;
+        if (guildUser != null) await guildUser.ModifyAsync(x => x.Channel = afkChannel);
+      }
+    }
+
     [Command("allhelp")]
     [Summary("Prints everything this bot can do.")]
     public async Task AllHelp()
