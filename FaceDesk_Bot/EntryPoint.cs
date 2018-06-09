@@ -83,6 +83,8 @@ namespace FaceDesk_Bot
       await Client.StartAsync();
       Console.WriteLine("Client started.");
 
+      LookupData.Init();
+
       await Client.SetGameAsync("dead");
 
       await Task.Delay(-1);

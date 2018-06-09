@@ -20,6 +20,19 @@ namespace FaceDesk_Bot.FD_MainModules
 {
   class LookupData
   {
+    public static void Init()
+    {
+      byte[] bytes = Encoding.BigEndianUnicode.GetBytes("🇦");
+      int lastIndex = bytes.Length - 1;
+      for (int i = 0; i < 26; i++)
+      {
+        string ustr = Encoding.BigEndianUnicode.GetString(bytes);
+        Console.WriteLine(ustr);
+        Emojis.Add(new Emoji(ustr));
+        bytes[lastIndex]++;
+      }
+    }
+
     public static Dictionary<string, string> TimeAbs = new Dictionary<string, string>()
     {
       { "AKST", "Alaskan Standard Time" },
@@ -29,6 +42,9 @@ namespace FaceDesk_Bot.FD_MainModules
       { "GMT", "Greenwich Standard Time" },
       { "PST", "Pacific Standard Time" },
     };
+
+    public static List<Emoji> Emojis = new List<Emoji>();
+
   }
 
   class UtilityModule : ModuleBase<SocketCommandContext>
@@ -137,6 +153,114 @@ namespace FaceDesk_Bot.FD_MainModules
 
       var message = (RestUserMessage) await this.Context.Channel.GetMessageAsync(msgid);
       await message.ModifyAsync(msg => msg.Content = newmsg);
+    }
+
+    [Command("react")]
+    [Summary("Adds a reaction to the previous message")]
+    public async Task Mreact(
+    [Summary("The reaction")] [Remainder] string reaction)
+    {
+      Emote res;
+      if (Emote.TryParse(reaction, out res))
+      {
+        var items = await Context.Channel.GetMessagesAsync(2).Flatten();
+        int i = 0;
+        foreach (IMessage message in items)
+        {
+          if (i == 1)
+          {
+            var msg = await Context.Channel.GetMessageAsync(message.Id) as RestUserMessage;
+            await msg.AddReactionAsync(res);
+          }
+          i++;
+        }
+      }
+    }
+
+    [Command("react")]
+    [Summary("Adds a reaction to the specified message")]
+    public async Task Mreact(
+      [Summary("The message")] ulong mid,
+      [Summary("The reaction")] string reaction)
+    {
+      Emote res;
+      if (Emote.TryParse(reaction, out res))
+      {
+        var msg = await Context.Channel.GetMessageAsync(mid) as RestUserMessage;
+        await msg.AddReactionAsync(res);
+      }
+    }
+
+
+    [Command("freact")]
+    [Summary("Adds a reaction to the previous message")]
+    public async Task Freact(
+    [Summary("The reaction")] [Remainder] string reaction)
+    {
+      reaction = "<:" + reaction + ">";
+      Emote res;
+      Console.WriteLine("Ping");
+      if (Emote.TryParse(reaction, out res))
+      {
+        Console.WriteLine("Pong");
+        var items = await Context.Channel.GetMessagesAsync(2).Flatten();
+        int i = 0;
+        foreach (IMessage message in items)
+        {
+          if (i == 1)
+          {
+            var msg = await Context.Channel.GetMessageAsync(message.Id) as RestUserMessage;
+            await msg.AddReactionAsync(res);
+          }
+          i++;
+        }
+      }
+    }
+
+    [Command("freact")]
+    [Summary("Adds a reaction to the specified message")]
+    public async Task Freact(
+      [Summary("The message")] ulong mid,
+      [Summary("The reaction")] string reaction)
+    {
+      reaction = "<:" + reaction + ">";
+      Emote res;
+      if (Emote.TryParse(reaction, out res))
+      {
+        var msg = await Context.Channel.GetMessageAsync(mid) as RestUserMessage;
+        await msg.AddReactionAsync(res);
+      }
+    }
+    
+    [Command("wreact")]
+    [Alias("wreact", "wr")]
+    [Summary("Adds a word-reaction to the previous message")]
+    public async Task Wreact(
+    [Summary("The reaction")] [Remainder] string reaction)
+    {
+      RestUserMessage rum = null;
+      var items = await Context.Channel.GetMessagesAsync(2).Flatten();
+      int i = 0;
+      foreach (IMessage message in items)
+      {
+        if (i == 1)
+        {
+          rum = await Context.Channel.GetMessageAsync(message.Id) as RestUserMessage;
+        }
+        i++;
+      }
+      if (rum == null) return;
+
+      await Context.Message.DeleteAsync();
+
+      reaction = reaction.ToUpper();
+      foreach (char c in reaction)
+      {
+        int index = c - 'A';
+        if (index < 0 || index > 26) continue;
+        Emoji r = LookupData.Emojis[index];
+        await rum.AddReactionAsync(r);
+      }
     }
 
     [Command("gg")]
