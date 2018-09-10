@@ -20,7 +20,7 @@ namespace FaceDesk_Bot.FD_MainModules
     {
       GuildPermissions noPerms = GuildPermissions.None;
       await role.ModifyAsync(x => x.Permissions = noPerms);
-      await Context.Message.AddReactionAsync(new Emoji("🤔"));
+      await Context.Message.AddReactionAsync(new Emoji("👌"));
     }
   }
 }

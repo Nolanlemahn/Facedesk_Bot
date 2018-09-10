@@ -8,9 +8,9 @@ namespace FaceDesk_Bot.FD_MainModules
 {
   class FunModule : ModuleBase<SocketCommandContext>
   {
+    //TODO: read from a file...
     public static List<string> BallPositiveResponses = new List<string>()
     {
-      "It is certain [+]",
       "It is decidedly so [+]",
       "Without a doubt [+]",
       "Yes definitely [+]",
@@ -20,7 +20,8 @@ namespace FaceDesk_Bot.FD_MainModules
       "Outlook good [+]",
       "Signs point to yes [+]",
       "Don't. Wait, you know what? Just go ahead [+]",
-      "Yes, but only because I want to see what happens. [+]"
+      "Yes, but only because I want to see what happens [+]",
+      "Fuck it, knock yourself out, I'll start making the popcorn [+]"
       };
 
     public static List<string> BallNegativeResponses = new List<string>()
@@ -35,6 +36,7 @@ namespace FaceDesk_Bot.FD_MainModules
         "Just don't [-]",
         "Don't hold your breath... Actually, you might as well [-]",
         "Pick a number between 1 and 7. You're wrong [-]",
+        "Just... I... *why*... No... Ugh... [-]"
       };
 
     //includes disasterous
@@ -53,15 +55,15 @@ namespace FaceDesk_Bot.FD_MainModules
       "Depends on your luck [?]",
       "Consider a different path [?]",
       "How about you ask a different question [?]",
-      "Ooh! Roll for initiative [?]",
       "Just kill it. With fire [!]",
       "You’re a disappointment for even asking [!]",
       "Shooka demands sacrifice [!]",
 
       "I really don't give a shit [...]",
       "I'm too busy thinking about that one time someone learned that you could buy multiple things at once [...]",
+      "I'm too busy thinking about that one time Nolan fell off a cliff [...]",
       "Shooka demands sac- nah, fuck off. [!]",
-      "Shooka demands alcohol [!]",
+      "Shooka demands alcohol **now** [!]",
       "Ask anyone else. I don't care who, just not me [!]",
       "Did you ask yourself that question before you asked me? I doubt it [?]",
     };
@@ -86,10 +88,18 @@ namespace FaceDesk_Bot.FD_MainModules
 
       string rand = randList[ballRandom.Next(randList.Count)];
 
+      string shakingMessage = "*shooka shooka...*";
+      int editDelay = 1000;
+      if (ballRandom.Next(10) > 8)
+      {
+        shakingMessage += " **KA-KRASH?!**";
+        editDelay += 1500;
+      }
+
       // Setup the initial message
-      var message = await this.Context.Channel.SendMessageAsync("*shooka shooka...*");
+      var message = await this.Context.Channel.SendMessageAsync(shakingMessage);
       // Pretend to think
-      await Task.Delay(1000);
+      await Task.Delay(editDelay);
       // Replace the initial message (edit) with the 8ball message
       await message.ModifyAsync(msg => msg.Content = rand);
     }
