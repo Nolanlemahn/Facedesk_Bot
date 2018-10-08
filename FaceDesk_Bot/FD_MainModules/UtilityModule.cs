@@ -45,11 +45,13 @@ namespace FaceDesk_Bot.FD_MainModules
 
     public static Dictionary<string, string> TimeAbs = new Dictionary<string, string>()
     {
+      { "AEST", "E. Australia Standard Time" },
       { "AKST", "Alaskan Standard Time" },
       { "CET", "Central European Standard Time" },
       { "CST", "Central Standard Time" },
       { "EST", "Eastern Standard Time" },
       { "GMT", "Greenwich Standard Time" },
+      { "NZST", "New Zealand Standard Time"},
       { "PST", "Pacific Standard Time" },
     };
 
