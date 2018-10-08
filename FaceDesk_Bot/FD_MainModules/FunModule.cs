@@ -36,7 +36,8 @@ namespace FaceDesk_Bot.FD_MainModules
         "Just don't [-]",
         "Don't hold your breath... Actually, you might as well [-]",
         "Pick a number between 1 and 7. You're wrong [-]",
-        "Just... I... *why*... No... Ugh... [-]"
+        "Just... I... *why*... No... Ugh... [-]",
+        "... Are you **stupid**? [-]"
       };
 
     //includes disasterous
@@ -57,15 +58,17 @@ namespace FaceDesk_Bot.FD_MainModules
       "How about you ask a different question [?]",
       "Just kill it. With fire [!]",
       "You’re a disappointment for even asking [!]",
-      "Shooka demands sacrifice [!]",
+      "Raon demands sacrifice [!]",
 
       "I really don't give a shit [...]",
       "I'm too busy thinking about that one time someone learned that you could buy multiple things at once [...]",
       "I'm too busy thinking about that one time Nolan fell off a cliff [...]",
-      "Shooka demands sac- nah, fuck off. [!]",
-      "Shooka demands alcohol **now** [!]",
+      "Raon demands sac- nah, fuck off. [!]",
+      "Raon demands alcohol **now** [!]",
       "Ask anyone else. I don't care who, just not me [!]",
       "Did you ask yourself that question before you asked me? I doubt it [?]",
+      "Sorry. Raon can't come to the phone right now. Please leave a message, after the fuck off. [!]",
+      "Raon and ZRT are BOTH judging you for asking that STUPID question. [!]"
     };
 
     public static List<List<string>> BallAllResponses = new List<List<string>>

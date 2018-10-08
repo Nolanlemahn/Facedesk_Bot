@@ -135,7 +135,7 @@ namespace FaceDesk_Bot.FD_MainModules
         realSummary += "`";
         foreach (var alias in command.Aliases)
         {
-          realSummary += ('[' + EntryPoint.Prefix + alias + "] ");
+          realSummary += ("[" + EntryPoint.Prefix + alias + "] ");
         }
         for (int i = 1; i < paramCounter; i++)
         {
@@ -266,9 +266,15 @@ namespace FaceDesk_Bot.FD_MainModules
     [Command("femoji")]
     [Summary("States an emoji")]
     public async Task Femoji(
-      [Summary("The reaction")] string emoji)
+      [Summary("The reaction")] string emoji,
+      [Summary("`a` to use the animated prefix")] string anim = "x")
     {
-      emoji = "<:" + emoji + ">";
+      string prefix = "<:";
+      if (anim == "a")
+      {
+        prefix = "<a:";
+      }
+      emoji = prefix + emoji + ">";
       Emote res;
       if (Emote.TryParse(emoji, out res))
       {

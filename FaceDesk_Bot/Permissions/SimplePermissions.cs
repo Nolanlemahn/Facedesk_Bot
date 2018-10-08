@@ -32,6 +32,7 @@ namespace FaceDesk_Bot.Permissions
     //see LocalExtensions.IsOwner
     public static void LoadOwners()
     {
+      Owners.Clear();
       string[] owners =
         System.IO.File.ReadAllText(Path.Combine(EntryPoint.RunningFolder, "owners.txt")).Split('\n');
       foreach (string owner in owners)
