@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
+using System.Net.NetworkInformation;
 using Discord.Rest;
 using Discord.WebSocket;
 using FaceDesk_Bot.Permissions;
@@ -24,22 +25,22 @@ namespace FaceDesk_Bot.FD_MainModules
     public static void Init()
     {
       byte[] bytes = Encoding.BigEndianUnicode.GetBytes("🇦");
-      int lastIndex = bytes.Length - 1;
+      int modeIndex = bytes.Length - 1; //last
       for (int i = 0; i < 26; i++)
       {
         string ustr = Encoding.BigEndianUnicode.GetString(bytes);
         Emojis.Add(new Emoji(ustr));
-        bytes[lastIndex]++;
+        bytes[modeIndex]++;
       }
 
-      bytes = Encoding.Unicode.GetBytes("\x0030\xFE0F\x20E3");
-      lastIndex = 0;
+      bytes = Encoding.BigEndianUnicode.GetBytes("0\u20e3");
+      modeIndex = 1; //second
       for (int i = 0; i < 10; i++)
       {
-        string ustr = Encoding.Unicode.GetString(bytes);
+        string ustr = Encoding.BigEndianUnicode.GetString(bytes);
         Console.WriteLine(ustr);
         Emojis.Add(new Emoji(ustr));
-        bytes[lastIndex]++;
+        bytes[modeIndex]++;
       }
     }
 
@@ -99,6 +100,33 @@ namespace FaceDesk_Bot.FD_MainModules
       var proc = Process.GetCurrentProcess();
       var mem = proc.WorkingSet64;
       await this.Context.Channel.SendMessageAsync(String.Format("🖥️ Using {0:n3} MB", mem / 1024.0 / 1024.0));
+    }
+
+    [Command("ping")]
+    [Summary("Pings discord.gg, and reports latency. If possible, also pings to voice server.")]
+    public async Task Ping()
+    {
+        Ping pinger = null;
+        PingReply reply = null;
+
+        try
+        {
+            pinger = new Ping();
+            reply = pinger.Send("discord.gg");
+        }
+        catch (PingException)
+        {
+            await this.Context.Channel.SendMessageAsync("⚠ Ping of `discord.gg` totally failed!");
+        }
+        finally
+        {
+            pinger?.Dispose();
+        }
+
+        await this.Context.Channel.SendMessageAsync("🏓 Pinged `discord.gg` in " + reply.RoundtripTime + " ms.");
+
+
+        var guildUser = this.Context.User as IGuildUser;
     }
 
     [Command("vkick")]
@@ -320,7 +348,6 @@ namespace FaceDesk_Bot.FD_MainModules
         }
         else
         {
-          return;
           int index = c - '0';
           if (index < 0 || index > 10) continue;
           Emoji r = LookupData.Emojis[index + 26];
@@ -363,7 +390,6 @@ namespace FaceDesk_Bot.FD_MainModules
         }
         else
         {
-          return;
           int index = c - '0';
           if (index < 0 || index > 10) continue;
           Emoji r = LookupData.Emojis[index + 26];
