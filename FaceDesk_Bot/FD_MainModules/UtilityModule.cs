@@ -62,6 +62,23 @@ namespace FaceDesk_Bot.FD_MainModules
 
   class UtilityModule : ModuleBase<SocketCommandContext>
   {
+    public static IEmote InterfacedEmoteConstructor(string input)
+    {
+      IEmote res = null;
+
+      Emote cres;
+      if (Emote.TryParse(input, out cres))
+      {
+        res = cres;
+      }
+      else
+      {
+        res = new Emoji(input);
+      }
+
+      return res;
+    }
+
     [Command("makeup")]
     [Summary("**Owner only**. Changes the profile picture.")]
     public async Task Makeup(
@@ -200,20 +217,19 @@ namespace FaceDesk_Bot.FD_MainModules
     public async Task Mreact(
     [Summary("The reaction")] [Remainder] string reaction)
     {
-      Emote res;
-      if (Emote.TryParse(reaction, out res))
+      IEmote res = UtilityModule.InterfacedEmoteConstructor(reaction);
+
+      var items = await Context.Channel.GetMessagesAsync(2).Flatten();
+      int i = 0;
+      foreach (IMessage message in items)
       {
-        var items = await Context.Channel.GetMessagesAsync(2).Flatten();
-        int i = 0;
-        foreach (IMessage message in items)
+        if (i == 1)
         {
-          if (i == 1)
-          {
-            var msg = await Context.Channel.GetMessageAsync(message.Id) as RestUserMessage;
-            await msg.AddReactionAsync(res);
-          }
-          i++;
+          var msg = await Context.Channel.GetMessageAsync(message.Id) as RestUserMessage;
+          await msg.AddReactionAsync(res);
+          await Context.Message.DeleteAsync();
         }
+        i++;
       }
     }
 
@@ -223,13 +239,9 @@ namespace FaceDesk_Bot.FD_MainModules
       [Summary("The message")] ulong mid,
       [Summary("The reaction")] string reaction)
     {
-      Emote res;
-      if (Emote.TryParse(reaction, out res))
-      {
-        var msg = await Context.Channel.GetMessageAsync(mid) as RestUserMessage;
-        await msg.AddReactionAsync(res);
-        await Context.Message.DeleteAsync();
-      }
+      var msg = await Context.Channel.GetMessageAsync(mid) as RestUserMessage;
+      await msg.AddReactionAsync(UtilityModule.InterfacedEmoteConstructor(reaction));
+      await Context.Message.DeleteAsync();
     }
 
 
@@ -388,6 +400,11 @@ namespace FaceDesk_Bot.FD_MainModules
           Emoji r = LookupData.Emojis[index];
           await rum.AddReactionAsync(r);
         }
+        else if (c == '!' || c == '?')
+        {
+          if (c == '!') await rum.AddReactionAsync(new Emoji("❗"));
+          if (c == '?') await rum.AddReactionAsync(new Emoji("❓"));
+        }
         else
         {
           int index = c - '0';
@@ -455,6 +472,7 @@ namespace FaceDesk_Bot.FD_MainModules
     //--
 
     [Command("prune")]
+    [Alias("purge")]
     [Summary("Deletes a specified amount of messages in the channel.")]
     [RequireBotPermission(GuildPermission.ManageMessages)]
     [RequireUserPermission(GuildPermission.ManageMessages)]
@@ -472,6 +490,7 @@ namespace FaceDesk_Bot.FD_MainModules
       [Remainder] [Summary("Other timezones, separated by commas")] string zones)
     {
       //try
+      zones = zones.ToUpper();
       {
         DateTime result;
         if (!DateTime.TryParse(time, out result))
