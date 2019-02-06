@@ -111,7 +111,7 @@ namespace FaceDesk_Bot.FD_MainModules
     [Summary("Prints the bots gender identity.")]
     public async Task Gender()
     {
-      var message = await this.Context.Channel.SendMessageAsync("I am currently identifying as a gender-neutral 8-ball because *apparently* that's all I'm good for! 😢");
+      var message = await this.Context.Channel.SendMessageAsync("🎶 _I'm a **bitch**, I'm a **lover**_ 🎶");
     }
   }
 }
