@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Discord.Commands;
@@ -8,76 +10,12 @@ namespace FaceDesk_Bot.FD_MainModules
 {
   class FunModule : ModuleBase<SocketCommandContext>
   {
-    //TODO: read from a file...
-    public static List<string> BallPositiveResponses = new List<string>()
-    {
-      "It is decidedly so [+]",
-      "Without a doubt [+]",
-      "Yes definitely [+]",
-      "You may rely on it [+]",
-      "As I see it, yes [+]",
-      "Most likely [+]",
-      "Outlook good [+]",
-      "Signs point to yes [+]",
-      "Don't. Wait, you know what? Just go ahead [+]",
-      "Yes, but only because I want to see what happens [+]",
-      "Fuck it, knock yourself out, I'll start making the popcorn [+]"
-      };
-
-    public static List<string> BallNegativeResponses = new List<string>()
-      {
-        "Don't count on it [-]",
-        "My reply is no [-]",
-        "My sources say no [-]",
-        "Very doubtful [-]",
-        "Don't even dream about it [-]",
-        "Not in this lifetime [-]",
-        "Impending disaster [-]",
-        "Just don't [-]",
-        "Don't hold your breath... Actually, you might as well [-]",
-        "Pick a number between 1 and 7. You're wrong [-]",
-        "Just... I... *why*... No... Ugh... [-]",
-        "... Are you **stupid**? [-]"
-      };
-
+    public static List<string> BallPositiveResponses;
+    public static List<string> BallNegativeResponses;
     //includes disasterous
-    public static List<string> BallNeutralResponses = new List<string>()
-    {
-      "Reply hazy try again [?]",
-      "Ask again later [?]",
-      "Better not tell you now [?]",
-      "Cannot predict now [?]",
-      "Concentrate and ask again [?]",
+    public static List<string> BallNeutralResponses;
 
-
-      "Swear fucking loudly and ask again [?]",
-      "No data. Ask Nolan [?]",
-      "I'm busy. Ping an idiot [?]",
-      "Depends on your luck [?]",
-      "Consider a different path [?]",
-      "How about you ask a different question [?]",
-      "Just kill it. With fire [!]",
-      "You’re a disappointment for even asking [!]",
-      "Raon demands sacrifice [!]",
-
-      "I really don't give a shit [...]",
-      "I'm too busy thinking about that one time someone learned that you could buy multiple things at once [...]",
-      "I'm too busy thinking about that one time Nolan fell off a cliff [...]",
-      "Raon demands sac- nah, fuck off. [!]",
-      "Raon demands alcohol **now** [!]",
-      "Ask anyone else. I don't care who, just not me [!]",
-      "Did you ask yourself that question before you asked me? I doubt it [?]",
-      "Sorry. Raon can't come to the phone right now. Please leave a message, after the fuck off. [!]",
-      "Raon and ZRT are BOTH judging you for asking that STUPID question. [!]"
-    };
-
-    public static List<List<string>> BallAllResponses = new List<List<string>>
-    {
-      BallPositiveResponses,
-      BallNegativeResponses,
-      BallNeutralResponses,
-      BallNeutralResponses//I know, I don't care
-    };
+    public static List<List<string>> BallAllResponses;
 
     private Random ballRandom = new Random();
 
@@ -85,6 +23,22 @@ namespace FaceDesk_Bot.FD_MainModules
     [Summary("Shakes the 8ball.")]
     public async Task BallShake()
     {
+      string eightballPath = Path.Combine(EntryPoint.RunningFolder, "8ball");
+      string rawPosResponses = File.ReadAllText(Path.Combine(eightballPath, "positive.txt"));
+      string rawNegResponses = File.ReadAllText(Path.Combine(eightballPath, "negative.txt"));
+      string rawNeutResponses = File.ReadAllText(Path.Combine(eightballPath, "neutral.txt"));
+
+      BallPositiveResponses = rawPosResponses.Split('\n').ToList();
+      BallNegativeResponses = rawNegResponses.Split('\n').ToList();
+      BallNeutralResponses = rawNeutResponses.Split('\n').ToList();
+      BallAllResponses = new List<List<string>>
+      {
+        BallPositiveResponses,
+        BallNegativeResponses,
+        BallNeutralResponses,
+        BallNeutralResponses//I know, I don't care
+      };
+
       List<string> randList =
         // Get a random 8ball message in advance
         BallAllResponses[ballRandom.Next(BallAllResponses.Count)];

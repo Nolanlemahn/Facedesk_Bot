@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Reflection;
-using System.Text.RegularExpressions;
 using Discord;
 using Discord.WebSocket;
 using Discord.Commands;
@@ -59,7 +57,7 @@ namespace FaceDesk_Bot
       //EntryPoint.Connection.Open();
 
       // Grab the token
-      string token = System.IO.File.ReadAllText(Path.Combine(RunningFolder, "nogit_token.txt"));
+      string token = File.ReadAllText(Path.Combine(RunningFolder, "nogit_token.txt"));
       Console.WriteLine("Key read.");
 
       Client = new DiscordSocketClient();
