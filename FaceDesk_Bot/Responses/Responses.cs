@@ -30,7 +30,7 @@ namespace FaceDesk_Bot.Responses
           return;
         }
 
-        if (messageParam.Content.Contains("┻━┻"))
+        if (messageParam.Content.Count(c => c == '┻') > 1)
         {
           await context.Channel.SendMessageAsync("┬─┬ ノ( ゜-゜ノ)" + "\n" + messageParam.Author.Mention + ", please respect the goddamn tables. 😠");
         }

@@ -40,7 +40,6 @@ namespace FaceDesk_Bot.FD_MainModules
       for (int i = 0; i < 10; i++)
       {
         string ustr = Encoding.BigEndianUnicode.GetString(bytes);
-        Console.WriteLine(ustr);
         Emojis.Add(new Emoji(ustr));
         bytes[modeIndex]++;
       }
@@ -327,72 +326,11 @@ namespace FaceDesk_Bot.FD_MainModules
       await Context.Message.DeleteAsync();
     }
 
-    [Command("wreact")]
-    [Alias("wreact", "wr")]
-    [Summary("Adds a word-reaction to the specified message")]
-    public async Task Wreact(
-      [Summary("The message")] ulong mid,
-      [Summary("The reaction")] string reaction)
+#region Word React
+    private async void wreactHelper(string reaction, RestUserMessage rum)
     {
-      RestUserMessage rum = null;
-      var items = await Context.Channel.GetMessagesAsync(2).Flatten();
-      int i = 0;
-      foreach (IMessage message in items)
-      {
-        if (i == 1)
-        {
-          rum = await Context.Channel.GetMessageAsync(mid) as RestUserMessage;
-        }
-        i++;
-      }
-      if (rum == null) return;
-
-      await Context.Message.DeleteAsync();
-
       reaction = reaction.ToUpper();
-      Console.WriteLine(reaction);
-      foreach (char c in reaction)
-      {
-        if ('A' <= c && c <= 'Z')
-        {
-          int index = c - 'A';
-          if (index < 0 || index > 26) continue;
-          Emoji r = LookupData.Emojis[index];
-          await rum.AddReactionAsync(r);
-        }
-        else
-        {
-          int index = c - '0';
-          if (index < 0 || index > 10) continue;
-          Emoji r = LookupData.Emojis[index + 26];
-          await rum.AddReactionAsync(r);
-        }
-      }
-    }
 
-    [Command("wreact")]
-    [Alias("wreact", "wr")]
-    [Summary("Adds a word-reaction to the previous message")]
-    public async Task Wreact(
-      [Summary("The reaction")] [Remainder] string reaction)
-    {
-      RestUserMessage rum = null;
-      var items = await Context.Channel.GetMessagesAsync(2).Flatten();
-      int i = 0;
-      foreach (IMessage message in items)
-      {
-        if (i == 1)
-        {
-          rum = await Context.Channel.GetMessageAsync(message.Id) as RestUserMessage;
-        }
-        i++;
-      }
-      if (rum == null) return;
-
-      await Context.Message.DeleteAsync();
-
-      reaction = reaction.ToUpper();
-      Console.WriteLine(reaction);
       foreach (char c in reaction)
       {
         if ('A' <= c && c <= 'Z')
@@ -416,6 +354,47 @@ namespace FaceDesk_Bot.FD_MainModules
         }
       }
     }
+
+    [Command("wreact")]
+    [Alias("wreact", "wr")]
+    [Summary("Adds a word-reaction to the specified message")]
+    public async Task Wreact(
+      [Summary("The message")] ulong mid,
+      [Summary("The reaction")] string reaction)
+    {
+      RestUserMessage rum = await Context.Channel.GetMessageAsync(mid) as RestUserMessage;
+      if (rum == null) return;
+
+      await Context.Message.DeleteAsync();
+
+      wreactHelper(reaction, rum);
+    }
+
+    [Command("wreact")]
+    [Alias("wreact", "wr")]
+    [Summary("Adds a word-reaction to the previous message")]
+    public async Task Wreact(
+      [Summary("The reaction")] [Remainder] string reaction)
+    {
+      RestUserMessage rum = null;
+      var items = await Context.Channel.GetMessagesAsync(2).Flatten();
+      int i = 0;
+      foreach (IMessage message in items)
+      {
+        if (i == 1)
+        {
+          rum = await Context.Channel.GetMessageAsync(message.Id) as RestUserMessage;
+        }
+        i++;
+      }
+      if (rum == null) return;
+
+      await Context.Message.DeleteAsync();
+
+
+      wreactHelper(reaction, rum);
+    }
+#endregion
 
     [Command("gg")]
     [Summary("**Owner only**. Kills the bot.")]
