@@ -454,7 +454,7 @@ namespace FaceDesk_Bot.FD_MainModules
 
     [Command("prune")]
     [Alias("purge")]
-    [Summary("Deletes a specified amount of messages in the channel.")]
+    [Summary("**Requires Manage Messages**. Deletes a specified amount of messages in the channel.")]
     [RequireBotPermission(GuildPermission.ManageMessages)]
     [RequireUserPermission(GuildPermission.ManageMessages)]
     public async Task Prune([Summary("Number of messages to delete.")] int delnum)
