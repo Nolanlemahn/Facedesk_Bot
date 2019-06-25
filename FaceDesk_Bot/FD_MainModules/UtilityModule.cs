@@ -238,7 +238,7 @@ namespace FaceDesk_Bot.FD_MainModules
     [Summary("Adds a reaction to the specified message")]
     public async Task Mreact(
       [Summary("The message")] ulong mid,
-      [Summary("The reaction")] string reaction)
+      [Summary("The reaction (Use the actual emoji.)")] string reaction)
     {
       var msg = await Context.Channel.GetMessageAsync(mid) as RestUserMessage;
       await msg.AddReactionAsync(UtilityModule.InterfacedEmoteConstructor(reaction));
@@ -249,7 +249,7 @@ namespace FaceDesk_Bot.FD_MainModules
     [Command("freact")]
     [Summary("Adds a reaction to the previous message")]
     public async Task Freact(
-    [Summary("The reaction")] [Remainder] string reaction)
+    [Summary("The reaction (Use the emoji ID.)")] [Remainder] string reaction)
     {
       reaction = "<:" + reaction + ">";
       Emote res;
@@ -276,7 +276,7 @@ namespace FaceDesk_Bot.FD_MainModules
     [Summary("Adds a reaction to the specified message")]
     public async Task Freact(
       [Summary("The message")] ulong mid,
-      [Summary("The reaction")] string reaction)
+      [Summary("The reaction (Use the emoji ID.)")] string reaction)
     {
       reaction = "<:" + reaction + ">";
       Emote res;
@@ -309,7 +309,7 @@ namespace FaceDesk_Bot.FD_MainModules
     [Command("femoji")]
     [Summary("States an emoji")]
     public async Task Femoji(
-      [Summary("The reaction")] string emoji,
+      [Summary("The reaction (Use the emoji ID.)")] string emoji,
       [Summary("`a` to use the animated prefix")] string anim = "x")
     {
       string prefix = "<:";

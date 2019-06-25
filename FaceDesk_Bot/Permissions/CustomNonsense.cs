@@ -4,17 +4,18 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Discord.Rest;
 using Discord.WebSocket;
 
 namespace FaceDesk_Bot.FD_MainModules
 {
   class CNModule : ModuleBase<SocketCommandContext>
   {
-    [RequireUserPermission(GuildPermission.Administrator)]
-    [RequireBotPermission(GuildPermission.Administrator)]
     [Command("zero_out")]
     [Alias("zero_out", "zo")]
-    [Summary("Zeros out a role.")]
+    [Summary("**Admin only**. Zeros out a role.")]
+    [RequireUserPermission(GuildPermission.Administrator)]
+    [RequireBotPermission(GuildPermission.Administrator)]
     public async Task ZeroOut(SocketRole role)
     {
       GuildPermissions noPerms = GuildPermissions.None;
@@ -32,7 +33,7 @@ namespace FaceDesk_Bot.FD_MainModules
       }
 
       await Context.Message.AddReactionAsync(new Emoji("👌"));
-      }
+    }
 
     [Command("orphaned")]
     [Alias("batman", "orph")]
@@ -41,12 +42,36 @@ namespace FaceDesk_Bot.FD_MainModules
     {
       IReadOnlyCollection<SocketRole> allRoles = Context.Guild.Roles;
 
+      string newMsg = "";
+      Task<RestUserMessage> startTask = Context.Channel.SendMessageAsync("Starting...");
+      await startTask;
       foreach (SocketRole role in allRoles)
       {
         if (!role.Members.Any())
         {
-          await Context.Channel.SendMessageAsync(role.Mention + " has no children.");
+          newMsg += (role.Mention + " has no children.\n");
+          await startTask.Result?.ModifyAsync(msg => msg.Content = newMsg);
         }
+      }
+
+      await Context.Message.AddReactionAsync(new Emoji("👌"));
+    }
+
+    [Command("massassign")]
+    [Alias("opera")]
+    [Summary("**Admin only**. __Very slow__. Gives a role to absolutely everyone.")]
+    [RequireUserPermission(GuildPermission.Administrator)]
+    [RequireBotPermission(GuildPermission.Administrator)]
+    public async Task Opera(SocketRole role)
+    {
+      GuildPermissions noPerms = GuildPermissions.None;
+      await role.ModifyAsync(x => x.Permissions = noPerms);
+
+      IReadOnlyCollection<SocketGuildUser> allUsers = this.Context.Guild.Users;
+
+      foreach (SocketGuildUser user in allUsers)
+      {
+        await user.AddRoleAsync(role);
       }
 
       await Context.Message.AddReactionAsync(new Emoji("👌"));
