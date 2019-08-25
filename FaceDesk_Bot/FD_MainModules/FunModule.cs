@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Discord;
 using Discord.Commands;
 
 namespace FaceDesk_Bot.FD_MainModules
@@ -67,5 +68,48 @@ namespace FaceDesk_Bot.FD_MainModules
     {
       var message = await this.Context.Channel.SendMessageAsync("🎶 _I'm a **bitch**, I'm a **lover**_ 🎶");
     }
+
+    [Command("vore")]
+    [Summary("Vores the given message.")]
+    public async Task Vore(
+      [Summary("The message to vore")] [Remainder] string msg)
+    {
+      string voreEmoteRaw = "<:turtlevore:585605828283858944>";
+
+      // Hand-wavy method to handle large messages
+      // Limit to 100 chars to avoid spamming
+      if (msg.Length > 100)
+      {
+        await ReplyAsync("What are you trying to make me vore? Your life story? No thanks. *(Character limit reached.)*");
+        return;
+      }
+
+      Emote emj;
+      if (Emote.TryParse(voreEmoteRaw, out emj))
+      {
+        for (int i = msg.Length; i > 0; i--)
+        {
+          string line = "";
+          // TODO: Naive, breaks with multi-coded glyphs. LU C# utf-8 codepoint handling. 
+          if (i < 4)
+          {
+            line = "*" + msg.Substring(0, i) + "*" + voreEmoteRaw;
+          }
+          else
+          {
+            line = msg.Substring(0, i - 3) + "*" + msg.Substring(i - 3, 3) + "*" + voreEmoteRaw;
+          }
+          await ReplyAsync(line);
+          // Required because lib doesn't handle rate-limit internally?
+          await Task.Delay(2000);
+        }
+        Emote stareEmj;
+        if (Emote.TryParse("<:turtlestare:585542857218326579>", out stareEmj))
+        {
+          await ReplyAsync("<:turtlestare:585542857218326579>");
+        }
+      }
+    }
+
   }
 }
