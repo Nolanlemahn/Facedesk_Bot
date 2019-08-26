@@ -77,7 +77,11 @@ namespace FaceDesk_Bot.FD_MainModules
       [Summary("The user to vore")] [Remainder]
       SocketGuildUser user)
     {
-      await Vore(user.Nickname);
+      if (!string.IsNullOrEmpty(user.Nickname))
+        await Vore(user.Nickname);
+
+      else
+        await Vore(user.Username);
     }
 
 
