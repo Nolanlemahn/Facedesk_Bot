@@ -109,17 +109,19 @@ namespace FaceDesk_Bot.FD_MainModules
         return;
       }
 
+      msg = msg.Replace("_", "\\_");
+
       string lengthValidationCopy = "";
       for (int i = msg.Length; i > 0; i--)
       {
         // TODO: Naive, breaks with multi-coded glyphs. LU C# utf-8 codepoint handling. 
         if (i < 4)
         {
-          lengthValidationCopy += "*" + msg.Substring(0, i) + "*" + voreEmoteRaw;
+          lengthValidationCopy += "_" + msg.Substring(0, i) + "_" + voreEmoteRaw;
         }
         else
         {
-          lengthValidationCopy += msg.Substring(0, i - 3) + "*" + msg.Substring(i - 3, 3) + "*" + voreEmoteRaw;
+          lengthValidationCopy += msg.Substring(0, i - 3) + "_" + msg.Substring(i - 3, 3) + "_" + voreEmoteRaw;
         }
       }
 
@@ -138,11 +140,11 @@ namespace FaceDesk_Bot.FD_MainModules
           // TODO: Naive, breaks with multi-coded glyphs. LU C# utf-8 codepoint handling. 
           if (i < 4)
           {
-            currMsg += "*" + msg.Substring(0, i) + "* " + voreEmoji;
+            currMsg += "_" + msg.Substring(0, i) + "_ " + voreEmoji;
           }
           else
           {
-            currMsg += msg.Substring(0, i - 3) + "*" + msg.Substring(i - 3, 3) + "* " + voreEmoji;
+            currMsg += msg.Substring(0, i - 3) + "_" + msg.Substring(i - 3, 3) + "_ " + voreEmoji;
           }
           currMsg += "\n";
 
