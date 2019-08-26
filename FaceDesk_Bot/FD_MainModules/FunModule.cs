@@ -133,8 +133,11 @@ namespace FaceDesk_Bot.FD_MainModules
       }
       else
       {
-        string currMsg = "";
-        IUserMessage editableMessage = null;
+        string currMsg = msg + " " + stareEmoji + "\n";
+        IUserMessage editableMessage = await ReplyAsync(currMsg);
+        // put in an arbitrary delay between edits
+        await Task.Delay(750);
+
         for (int i = msg.Length; i > 0; i--)
         {
           // TODO: Naive, breaks with multi-coded glyphs. LU C# utf-8 codepoint handling. 
@@ -148,14 +151,8 @@ namespace FaceDesk_Bot.FD_MainModules
           }
           currMsg += "\n";
 
-          if(i == msg.Length)
-          {
-            editableMessage = await ReplyAsync(currMsg);
-          }
-          else
-          {
-            await editableMessage.ModifyAsync(msgProps => msgProps.Content = currMsg);
-          }
+          string copyCurrMsg = currMsg;
+          await editableMessage.ModifyAsync(msgProps => msgProps.Content = copyCurrMsg);
 
           // put in an arbitrary delay between edits
           await Task.Delay(750);
