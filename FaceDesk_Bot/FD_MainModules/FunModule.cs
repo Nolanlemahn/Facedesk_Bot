@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Discord.Rest;
 
 namespace FaceDesk_Bot.FD_MainModules
 {
@@ -66,7 +67,7 @@ namespace FaceDesk_Bot.FD_MainModules
     [Summary("Prints the bots gender identity.")]
     public async Task Gender()
     {
-      var message = await this.Context.Channel.SendMessageAsync("🎶 _I'm a **bitch**, I'm a **lover**_ 🎶");
+      await this.Context.Channel.SendMessageAsync("🎶 _I'm a **bitch**, I'm a **lover**_ 🎶");
     }
 
     [Command("vore")]
@@ -74,40 +75,77 @@ namespace FaceDesk_Bot.FD_MainModules
     public async Task Vore(
       [Summary("The message to vore")] [Remainder] string msg)
     {
-      string voreEmoteRaw = "<:turtlevore:585605828283858944>";
+      if (msg.Length < 3)
+      {
+        await ReplyAsync("That doesn't look very tasty. No thanks. *(Character minimum of 3 not met.)*");
+        return;
+      }
 
-      // Hand-wavy method to handle large messages
-      // Limit to 100 chars to avoid spamming
-      if (msg.Length > 100)
+      string voreEmoteRaw = "<:turtlevore:585605828283858944>";
+      string stareEmoteRaw = "<:turtlestare:585542857218326579>";
+
+      Emote voreEmoji;
+      Emote stareEmoji;
+
+      if (!Emote.TryParse(voreEmoteRaw, out voreEmoji) ||
+          !Emote.TryParse(stareEmoteRaw, out stareEmoji))
+      {
+        await ReplyAsync("😢 Looking up the emojis failed...");
+        return;
+      }
+
+      string lengthValidationCopy = "";
+      for (int i = msg.Length; i > 0; i--)
+      {
+        // TODO: Naive, breaks with multi-coded glyphs. LU C# utf-8 codepoint handling. 
+        if (i < 4)
+        {
+          lengthValidationCopy += "*" + msg.Substring(0, i) + "*" + voreEmoteRaw;
+        }
+        else
+        {
+          lengthValidationCopy += msg.Substring(0, i - 3) + "*" + msg.Substring(i - 3, 3) + "*" + voreEmoteRaw;
+        }
+      }
+
+
+      if (lengthValidationCopy.Length > 1900) //or so.
       {
         await ReplyAsync("What are you trying to make me vore? Your life story? No thanks. *(Character limit reached.)*");
         return;
       }
-
-      Emote emj;
-      if (Emote.TryParse(voreEmoteRaw, out emj))
+      else
       {
+        string currMsg = "";
+        IUserMessage editableMessage = null;
         for (int i = msg.Length; i > 0; i--)
         {
-          string line = "";
           // TODO: Naive, breaks with multi-coded glyphs. LU C# utf-8 codepoint handling. 
           if (i < 4)
           {
-            line = "*" + msg.Substring(0, i) + "*" + voreEmoteRaw;
+            currMsg += "*" + msg.Substring(0, i) + "* " + voreEmoji;
           }
           else
           {
-            line = msg.Substring(0, i - 3) + "*" + msg.Substring(i - 3, 3) + "*" + voreEmoteRaw;
+            currMsg += msg.Substring(0, i - 3) + "*" + msg.Substring(i - 3, 3) + "* " + voreEmoji;
           }
-          await ReplyAsync(line);
-          // Required because lib doesn't handle rate-limit internally?
-          await Task.Delay(2000);
+          currMsg += "\n";
+
+          if(i == msg.Length)
+          {
+            editableMessage = await ReplyAsync(currMsg);
+          }
+          else
+          {
+            await editableMessage.ModifyAsync(msgProps => msgProps.Content = currMsg);
+          }
+
+          // put in an arbitrary delay between edits
+          await Task.Delay(750);
         }
-        Emote stareEmj;
-        if (Emote.TryParse("<:turtlestare:585542857218326579>", out stareEmj))
-        {
-          await ReplyAsync("<:turtlestare:585542857218326579>");
-        }
+
+        currMsg += stareEmoji;
+        await editableMessage.ModifyAsync(msgProps => msgProps.Content = currMsg);
       }
     }
 
