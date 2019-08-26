@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.Rest;
+using Discord.WebSocket;
 
 namespace FaceDesk_Bot.FD_MainModules
 {
@@ -69,6 +70,16 @@ namespace FaceDesk_Bot.FD_MainModules
     {
       await this.Context.Channel.SendMessageAsync("🎶 _I'm a **bitch**, I'm a **lover**_ 🎶");
     }
+
+    [Command("vore")]
+    [Summary("Vores the given user.")]
+    public async Task Vore(
+      [Summary("The user to vore")] [Remainder]
+      SocketGuildUser user)
+    {
+      await Vore(user.Nickname);
+    }
+
 
     [Command("vore")]
     [Summary("Vores the given message.")]
