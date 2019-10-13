@@ -26,6 +26,27 @@ namespace FaceDesk_Bot.FD_MainModules
     [Summary("Shakes the 8ball.")]
     public async Task BallShake()
     {
+      SocketUser author = this.Context.Message.Author;
+      // Get the question
+      IEnumerable<IMessage> previousMessages = await this.Context.Channel.GetMessagesAsync().Flatten();
+      List<IMessage> authoredMessages = new List<IMessage>();
+
+      foreach (IMessage previousMessage in previousMessages)
+      {
+        if (previousMessage.Author.Id == author.Id)
+        {
+          authoredMessages.Add(previousMessage);
+        }
+      }
+
+      bool beNice = false;
+      authoredMessages.Remove(authoredMessages.First());
+      // "please" indicates politeness
+      if (authoredMessages.Count > 0 && authoredMessages.First().Content.ToUpper().Contains("PLEASE"))
+      {
+        beNice = true;
+      }
+
       string eightballPath = Path.Combine(EntryPoint.RunningFolder, "8ball");
       string rawPosResponses = File.ReadAllText(Path.Combine(eightballPath, "positive.txt"));
       string rawNegResponses = File.ReadAllText(Path.Combine(eightballPath, "negative.txt"));
@@ -33,14 +54,19 @@ namespace FaceDesk_Bot.FD_MainModules
 
       BallPositiveResponses = rawPosResponses.Split('\n').ToList();
       BallNegativeResponses = rawNegResponses.Split('\n').ToList();
-      BallNeutralResponses = rawNeutResponses.Split('\n').ToList();
       BallAllResponses = new List<List<string>>
       {
         BallPositiveResponses,
         BallNegativeResponses,
-        BallNeutralResponses,
-        BallNeutralResponses//I know, I don't care
       };
+
+      // If we aren't being nice in response to politeness, add the neutral responses
+      if (!beNice)
+      {
+        BallNeutralResponses = rawNeutResponses.Split('\n').ToList();
+        BallAllResponses.Append(BallNeutralResponses);
+        BallAllResponses.Append(BallNeutralResponses);
+      }
 
       List<string> randList =
         // Get a random 8ball message in advance
@@ -49,6 +75,8 @@ namespace FaceDesk_Bot.FD_MainModules
       string rand = randList[ballRandom.Next(randList.Count)];
 
       string shakingMessage = "*shooka shooka...*";
+      if (beNice) shakingMessage += "_❤️..._";
+
       int editDelay = 1000;
       if (ballRandom.Next(10) > 8)
       {
