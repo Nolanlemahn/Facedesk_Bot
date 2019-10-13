@@ -27,8 +27,8 @@ namespace FaceDesk_Bot.FD_MainModules
     public async Task BallShake()
     {
       SocketUser author = this.Context.Message.Author;
-      // Get the question
-      IEnumerable<IMessage> previousMessages = await this.Context.Channel.GetMessagesAsync().Flatten();
+      // Get the question - arbitrarily, question must have been in the previous 10 messages
+      IEnumerable<IMessage> previousMessages = await this.Context.Channel.GetMessagesAsync(10).Flatten();
       List<IMessage> authoredMessages = new List<IMessage>();
 
       foreach (IMessage previousMessage in previousMessages)
