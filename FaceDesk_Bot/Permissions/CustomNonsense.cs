@@ -64,9 +64,6 @@ namespace FaceDesk_Bot.FD_MainModules
     [RequireBotPermission(GuildPermission.Administrator)]
     public async Task Opera(SocketRole role)
     {
-      GuildPermissions noPerms = GuildPermissions.None;
-      await role.ModifyAsync(x => x.Permissions = noPerms);
-
       IReadOnlyCollection<SocketGuildUser> allUsers = this.Context.Guild.Users;
 
       foreach (SocketGuildUser user in allUsers)
