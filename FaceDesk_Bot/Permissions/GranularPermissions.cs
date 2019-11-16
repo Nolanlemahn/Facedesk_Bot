@@ -58,7 +58,7 @@ namespace FaceDesk_Bot.Permissions
     public async Task RemoveFromChannel(
       [Summary("The user to remove")] SocketGuildUser user)
     {
-      List<ulong> mods = await GranularPermissions.GetChannelmodsFor(this.Context.Guild.Id, this.Context.Channel as ISocketMessageChannel);
+      List<ulong> mods = await GranularPermissions.GetChannelmodsFor(this.Context.Guild.Id, this.Context.Channel);
 
       if (!mods.Contains(this.Context.User.Id))
       {
@@ -100,7 +100,7 @@ namespace FaceDesk_Bot.Permissions
         update["mods"] = mods;
 
         await channelDoc.SetAsync(update, SetOptions.MergeAll);
-        await this.Context.Channel.SendMessageAsync("Removed a channelmod.");
+        await this.Context.Channel.SendMessageAsync("Removed a channelmod. (Their Discord permissions were not changed.)");
       }
     }
   }

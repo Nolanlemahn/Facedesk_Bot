@@ -17,8 +17,6 @@ using Google.Cloud.Firestore;
 //
 using FaceDesk_Bot.FD_MainModules;
 using FaceDesk_Bot.Permissions;
-using Google.Cloud.Firestore.V1;
-using Google.Cloud.Storage.V1;
 
 namespace FaceDesk_Bot
 {
@@ -45,7 +43,6 @@ namespace FaceDesk_Bot
     public static DiscordSocketClient Client;
     public static FirestoreDb Firestore;
 
-    public static bool Lockdown = false;
     public static char Prefix = '^';
     private IServiceProvider _services;
 
@@ -155,11 +152,8 @@ namespace FaceDesk_Bot
       if (runPreprocess != PreprocessType.NO_PREPROC)
       {
         Console.WriteLine("Preprocessing...");
-        if (EntryPoint.Lockdown && context.User.Id != application.Owner.Id)
-        {
-          await context.Channel.SendMessageAsync("We are on lockdown.");
-          return;
-        }
+        if (context.User.Id != application.Owner.Id)
+
         switch (runPreprocess)
         {
           case PreprocessType.Direct:
@@ -169,12 +163,6 @@ namespace FaceDesk_Bot
       }
       else
       {
-        if (EntryPoint.Lockdown && context.User.Id != application.Owner.Id)
-        {
-          await context.Channel.SendMessageAsync("We are on lockdown.");
-          return;
-        }
-
         var result = await MainCommandService.ExecuteAsync(context, argPos, _services);
         if (result.Error == CommandError.UnknownCommand) return;
         if (!result.IsSuccess)
