@@ -528,8 +528,6 @@ namespace FaceDesk_Bot.FD_MainModules
         var ebh = new EmbedBuilder();
         ebh.WithTitle(result.ToString("h:mm tt") + " in " + otzi.StandardName + " conversions\n");
 
-        string msg = "";
-
         int i = 0;
         foreach (TimeZoneInfo tzi in tzis)
         {
