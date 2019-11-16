@@ -3,15 +3,22 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Reflection;
+
 using Discord;
 using Discord.WebSocket;
 using Discord.Commands;
 using Discord.Rest;
+
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 
+using Google.Cloud.Firestore;
+
+//
 using FaceDesk_Bot.FD_MainModules;
 using FaceDesk_Bot.Permissions;
+using Google.Cloud.Firestore.V1;
+using Google.Cloud.Storage.V1;
 
 namespace FaceDesk_Bot
 {
@@ -33,9 +40,11 @@ namespace FaceDesk_Bot
 #endif
 
     public static string RunningFolder;
+
     public static CommandService MainCommandService;
     public static DiscordSocketClient Client;
-    public static SqliteConnection Connection;
+    public static FirestoreDb Firestore;
+
     public static bool Lockdown = false;
     public static char Prefix = '^';
     private IServiceProvider _services;
@@ -46,15 +55,13 @@ namespace FaceDesk_Bot
     {
       // Find where we are executing from
       RunningFolder = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
-      Console.WriteLine(RunningFolder);
+      Console.WriteLine("Running from: " + RunningFolder);
 
       // Database!
-      EntryPoint.Connection = new SqliteConnection("" + 
-        new SqliteConnectionStringBuilder
-        {
-          DataSource = "nogit_data.db"
-        });
-      //EntryPoint.Connection.Open();
+      string projectid = File.ReadAllText(Path.Combine(RunningFolder, "nogit_firestoreproject.txt"));
+      Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", "nogit_serviceaccount.json"); //this is unforgivable
+      Firestore = FirestoreDb.Create(projectid);
+      Console.WriteLine("Connected to Firestore (Hopefully).");
 
       // Grab the token
       string token = File.ReadAllText(Path.Combine(RunningFolder, "nogit_token.txt"));
@@ -76,6 +83,7 @@ namespace FaceDesk_Bot
       Console.WriteLine("Logged in.");
 
       SimplePermissions.LoadOwners();
+      GranularPermissions.Setup(Firestore);
       Console.WriteLine("Permissions loaded.");
 
       await Client.StartAsync();
@@ -99,6 +107,7 @@ namespace FaceDesk_Bot
       await MainCommandService.AddModuleAsync(typeof(FD_MainModules.UtilityModule));
       await MainCommandService.AddModuleAsync(typeof(FD_MainModules.FunModule));
       await MainCommandService.AddModuleAsync(typeof(Permissions.SimplePermissionsModule));
+      await MainCommandService.AddModuleAsync(typeof(Permissions.GranularPermissionsModule));
 
       await MainCommandService.AddModuleAsync(typeof(FD_MainModules.CNModule));
 

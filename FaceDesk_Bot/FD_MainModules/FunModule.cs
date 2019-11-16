@@ -13,10 +13,9 @@ namespace FaceDesk_Bot.FD_MainModules
 {
   class FunModule : ModuleBase<SocketCommandContext>
   {
-    public static List<string> BallPositiveResponses;
-    public static List<string> BallNegativeResponses;
-    //includes disasterous
-    public static List<string> BallNeutralResponses;
+    public static List<string> BallPositiveResponses; //+
+    public static List<string> BallNegativeResponses; //-
+    public static List<string> BallNeutralResponses;  //!, ?
 
     public static List<List<string>> BallAllResponses;
 
