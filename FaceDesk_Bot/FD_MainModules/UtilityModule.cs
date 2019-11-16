@@ -454,11 +454,25 @@ namespace FaceDesk_Bot.FD_MainModules
 
     [Command("prune")]
     [Alias("purge")]
-    [Summary("**Requires Manage Messages**. Deletes a specified amount of messages in the channel.")]
+    [Summary("**Requires Manage Messages**. **User requires cmod or Manage Messages**. Deletes a specified amount of messages in the channel.")]
     [RequireBotPermission(GuildPermission.ManageMessages)]
     [RequireUserPermission(GuildPermission.ManageMessages)]
     public async Task Prune([Summary("Number of messages to delete.")] int delnum)
     {
+      if (Context.User is SocketGuildUser sgu)
+      {
+        if (!sgu.GuildPermissions.ManageMessages)
+        {
+          List<ulong> mods = await GranularPermissions.GetChannelmodsFor(this.Context.Guild.Id, this.Context.Channel as ISocketMessageChannel);
+
+          if (!mods.Contains(this.Context.User.Id))
+          {
+            await this.Context.Channel.SendMessageAsync("You are not able to manage messages on this server/channel: **" + this.Context.Channel.Name + "**");
+            return;
+          }
+        }
+      }
+
       var items = await Context.Channel.GetMessagesAsync(delnum + 1).Flatten();
       await this.Context.Channel.DeleteMessagesAsync(items);
     }
