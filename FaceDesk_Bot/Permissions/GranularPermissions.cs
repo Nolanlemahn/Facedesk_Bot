@@ -90,11 +90,17 @@ namespace FaceDesk_Bot.Permissions
         update["mods"] = mods;
 
         await channelDoc.SetAsync(update, SetOptions.MergeAll);
+        if (this.Context.Channel is SocketGuildChannel sgc) await sgc.AddPermissionOverwriteAsync(user,
+          new OverwritePermissions(readMessages: PermValue.Allow, sendMessages: PermValue.Allow, manageMessages: PermValue.Allow));
         await this.Context.Message.AddReactionAsync(new Emoji("👌"));
       }
       else
       {
-        await this.Context.Channel.SendMessageAsync("You were already a cmod of that channel.");
+        mods.RemoveAll(x => x == user.Id);
+        update["mods"] = mods;
+
+        await channelDoc.SetAsync(update, SetOptions.MergeAll);
+        await this.Context.Channel.SendMessageAsync("Removed a channelmod.");
       }
     }
   }
@@ -124,7 +130,6 @@ namespace FaceDesk_Bot.Permissions
           foreach (object id in mods)
           {
             casted.Add(Convert.ToUInt64(id));
-            Console.Write(Convert.ToUInt64(id));
           }
 
           return casted;
