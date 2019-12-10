@@ -62,6 +62,7 @@ namespace FaceDesk_Bot.FD_MainModules
     [Summary("**Admin only**. __Very slow__. Gives a role to absolutely everyone.")]
     [RequireUserPermission(GuildPermission.Administrator)]
     [RequireBotPermission(GuildPermission.Administrator)]
+    //headpat the nolan
     public async Task Opera(SocketRole role)
     {
       IReadOnlyCollection<SocketGuildUser> allUsers = this.Context.Guild.Users;
