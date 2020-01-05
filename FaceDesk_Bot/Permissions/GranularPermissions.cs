@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -12,6 +10,23 @@ namespace FaceDesk_Bot.Permissions
 {
   class GranularPermissionsModule : ModuleBase<SocketCommandContext>
   {
+    #region auth
+    // Mostly for debug. Non-owners can't issue commands on an unauthed server.
+    [Command("checkauth")]
+    [Summary("**Owner only**. Checks authorization status.")]
+    public async Task CheckAuth()
+    {
+      Task<bool> result = this.Context.IsOwner();
+      if (!result.Result) return;
+
+      bool authed = await GranularPermissions.GetAuthStatusFor(this.Context.Guild.Id);
+
+      if(authed) await this.Context.Message.AddReactionAsync(new Emoji("👌"));
+      else await this.Context.Message.AddReactionAsync(new Emoji("👎"));
+    }
+    #endregion
+
+    #region channelmod
     [Command("addtochannel")]
     [Alias("atc")]
     [Summary("**Channelmod only**. Adds target user (grants message read/send) to channel.")]
@@ -103,13 +118,36 @@ namespace FaceDesk_Bot.Permissions
         await this.Context.Channel.SendMessageAsync("Removed a channelmod. (Their Discord permissions were not changed.)");
       }
     }
+    #endregion
   }
 
   class GranularPermissions
   {
     private static FirestoreDb _fs;
+    private static Dictionary<ulong, bool> _guildAuthorized;
+    private static Dictionary<ulong, DateTime> _guildLastChecked;
 
     public static CollectionReference Db => _fs.Collection("discord_bot");
+
+    #region auth
+    public static async Task<bool> GetAuthStatusFor(ulong guildID)
+    {
+      DocumentReference guildDocument = Db.Document(Convert.ToString(guildID));
+      DocumentSnapshot guildDocumentSnapshot = await guildDocument.GetSnapshotAsync();
+
+      if (_guildAuthorized.GetValueOrDefault(guildID)) return true;
+
+      if(guildDocumentSnapshot.Exists)
+      {
+        bool authorizeFetched;
+        bool isAuthorized = guildDocumentSnapshot.TryGetValue<bool>("authorized", out authorizeFetched);
+
+        _guildAuthorized[guildID] = authorizeFetched && isAuthorized;
+        return authorizeFetched && isAuthorized;
+      }
+      return false;
+    }
+    #endregion
 
     public static async Task<List<ulong>> GetChannelmodsFor(ulong guildID, ISocketMessageChannel channel)
     {
@@ -142,6 +180,8 @@ namespace FaceDesk_Bot.Permissions
     public static void Setup(FirestoreDb firestore)
     {
       _fs = firestore;
+
+      _guildAuthorized = new Dictionary<ulong, bool>();
     }
   }
 }
