@@ -424,30 +424,29 @@ namespace FaceDesk_Bot.FD_MainModules
     }
 
     [Command("cleanup")]
-    [Summary("**Owner only**. Don't ask.")]
+    [Summary("**Admin only**. Kicks all users without roles.")]
+    [RequireUserPermission(GuildPermission.Administrator)]
+    [RequireBotPermission(GuildPermission.Administrator)]
     public async Task Cleanup()
     {
-      if (this.Context.IsOwner().Result)
+      List<SocketGuildUser> kickables = new List<SocketGuildUser>();
+      foreach (SocketGuildUser user in this.Context.Guild.Users)
       {
-        List<SocketGuildUser> kickables = new List<SocketGuildUser>();
-        foreach (SocketGuildUser user in this.Context.Guild.Users)
+        Console.WriteLine(user.Username + "#" + user.DiscriminatorValue +
+          " has " + user.Roles.Count + " roles.");
+
+        if (user.Roles.Count <= 1)
         {
-          Console.WriteLine(user.Username + "#" + user.DiscriminatorValue +
-            " has " + user.Roles.Count + " roles.");
-
-          if (user.Roles.Count <= 1)
-          {
-            kickables.Add(user);
-          }
+          kickables.Add(user);
         }
-
-        foreach (SocketGuildUser kickable in kickables)
-        {
-          await kickable.KickAsync();
-        }
-
-        await this.Context.Message.AddReactionAsync(new Emoji("💀"));
       }
+
+      foreach (SocketGuildUser kickable in kickables)
+      {
+        await kickable.KickAsync();
+      }
+
+      await this.Context.Message.AddReactionAsync(new Emoji("💀"));
     }
 
     //--
