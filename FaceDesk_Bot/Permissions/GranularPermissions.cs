@@ -24,6 +24,42 @@ namespace FaceDesk_Bot.Permissions
       if(authed) await this.Context.Message.AddReactionAsync(new Emoji("👌"));
       else await this.Context.Message.AddReactionAsync(new Emoji("👎"));
     }
+
+    [Command("addkey")]
+    [Summary("**Owner only**. Adds an authorization code.")]
+    public async Task AddKey([Summary("The authorization code")] string code)
+    {
+      Task<bool> result = this.Context.IsOwner();
+      if (!result.Result) return;
+
+      await GranularPermissions.AddAuthCode(code);
+      await this.Context.Message.AddReactionAsync(new Emoji("👌"));
+    }
+
+    [Command("authorize")]
+    [Alias("auth")]
+    [Summary("Consumes an authorization code to use the bot with this server.")]
+    public async Task Authorize([Summary("The authorization code")] string code)
+    {
+      bool authed = await GranularPermissions.GetAuthStatusFor(this.Context.Guild.Id);
+
+      if (authed)
+      {
+        await this.Context.Message.AddReactionAsync(new Emoji("❓"));
+        await this.Context.Channel.SendMessageAsync("This server is already authorized.");
+      }
+      else
+      {
+        bool codeConsumed = await GranularPermissions.TryConsumeAuthCode(this.Context.Guild.Id, code);
+
+        if (codeConsumed) await this.Context.Message.AddReactionAsync(new Emoji("👌"));
+        else
+        {
+          await this.Context.Message.AddReactionAsync(new Emoji("👎"));
+          await this.Context.Channel.SendMessageAsync("That code was already used or didn't exist.");
+        }
+      }
+    }
     #endregion
 
     #region channelmod
@@ -123,6 +159,16 @@ namespace FaceDesk_Bot.Permissions
 
   class GranularPermissions
   {
+    [FirestoreData]
+    public struct AuthorizationStatus
+    {
+      [FirestoreProperty]
+      public ulong sid { get; set; }
+
+      [FirestoreProperty]
+      public bool used { get; set; }
+    }
+
     private static FirestoreDb _fs;
     private static Dictionary<ulong, bool> _guildAuthorized;
     private static Dictionary<ulong, DateTime> _guildLastChecked;
@@ -132,18 +178,61 @@ namespace FaceDesk_Bot.Permissions
     #region auth
     public static async Task<bool> GetAuthStatusFor(ulong guildID)
     {
+      if (_guildAuthorized.GetValueOrDefault(guildID)) return true;
+
       DocumentReference guildDocument = Db.Document(Convert.ToString(guildID));
       DocumentSnapshot guildDocumentSnapshot = await guildDocument.GetSnapshotAsync();
-
-      if (_guildAuthorized.GetValueOrDefault(guildID)) return true;
 
       if(guildDocumentSnapshot.Exists)
       {
         bool authorizeFetched;
-        bool isAuthorized = guildDocumentSnapshot.TryGetValue<bool>("authorized", out authorizeFetched);
+        bool isAuthorized = guildDocumentSnapshot.TryGetValue("authorized", out authorizeFetched);
 
         _guildAuthorized[guildID] = authorizeFetched && isAuthorized;
         return authorizeFetched && isAuthorized;
+      }
+      return false;
+    }
+
+    public static async Task SetAuthFor(ulong guildID, bool status)
+    {
+      DocumentReference guildDocument = Db.Document(Convert.ToString(guildID));
+
+      Dictionary<string, object> update = new Dictionary<string, object>
+      {
+        ["authorized"] = status
+      };
+
+      await guildDocument.SetAsync(update, SetOptions.MergeAll);
+    }
+
+    public static async Task AddAuthCode(string code)
+    {
+      //TODO: should probably not allow key clobbering
+      DocumentReference codeDataRef = Db.Document("_authorizeKeys").Collection(code).Document("data");
+      await codeDataRef.SetAsync(new AuthorizationStatus{used = false, sid = 0});
+    }
+
+    public static async Task<bool> TryConsumeAuthCode(ulong guildID, string code)
+    {
+      CollectionReference authDocument = Db.Document("_authorizeKeys").Collection(code);
+      QuerySnapshot authDocumentSnapshot = await authDocument.GetSnapshotAsync();
+
+      if (authDocumentSnapshot.Count > 0)
+      {
+        DocumentSnapshot authDoc = authDocumentSnapshot.Documents[0];
+        DocumentReference authRef = authDoc.Reference;
+
+        AuthorizationStatus authStatus = authDoc.ConvertTo<AuthorizationStatus>();
+        if (authStatus.used) return false;
+        else
+        {
+          authStatus.used = true;
+          authStatus.sid = guildID;
+          await authRef.SetAsync(authStatus);
+          await SetAuthFor(guildID, true);
+          return true;
+        }
       }
       return false;
     }
