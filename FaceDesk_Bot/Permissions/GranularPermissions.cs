@@ -41,24 +41,7 @@ namespace FaceDesk_Bot.Permissions
     [Summary("Consumes an authorization code to use the bot with this server.")]
     public async Task Authorize([Summary("The authorization code")] string code)
     {
-      bool authed = await GranularPermissions.GetAuthStatusFor(this.Context.Guild.Id);
-
-      if (authed)
-      {
-        await this.Context.Message.AddReactionAsync(new Emoji("❓"));
-        await this.Context.Channel.SendMessageAsync("This server is already authorized.");
-      }
-      else
-      {
-        bool codeConsumed = await GranularPermissions.TryConsumeAuthCode(this.Context.Guild.Id, code);
-
-        if (codeConsumed) await this.Context.Message.AddReactionAsync(new Emoji("👌"));
-        else
-        {
-          await this.Context.Message.AddReactionAsync(new Emoji("👎"));
-          await this.Context.Channel.SendMessageAsync("That code was already used or didn't exist.");
-        }
-      }
+      await GranularPermissions.TryAuthFromContext(this.Context, code);
     }
     #endregion
 
@@ -176,6 +159,28 @@ namespace FaceDesk_Bot.Permissions
     public static CollectionReference Db => _fs.Collection("discord_bot");
 
     #region auth
+    public static async Task TryAuthFromContext(SocketCommandContext context, string code)
+    {
+      bool authed = await GranularPermissions.GetAuthStatusFor(context.Guild.Id);
+
+      if (authed)
+      {
+        await context.Message.AddReactionAsync(new Emoji("❓"));
+        await context.Channel.SendMessageAsync("This server is already authorized.");
+      }
+      else
+      {
+        bool codeConsumed = await GranularPermissions.TryConsumeAuthCode(context.Guild.Id, code);
+
+        if (codeConsumed) await context.Message.AddReactionAsync(new Emoji("👌"));
+        else
+        {
+          await context.Message.AddReactionAsync(new Emoji("👎"));
+          await context.Channel.SendMessageAsync("That code was already used or didn't exist.");
+        }
+      }
+    }
+
     public static async Task<bool> GetAuthStatusFor(ulong guildID)
     {
       if (_guildAuthorized.GetValueOrDefault(guildID)) return true;

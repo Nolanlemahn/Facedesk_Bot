@@ -17,6 +17,7 @@ using Google.Cloud.Firestore;
 //
 using FaceDesk_Bot.FD_MainModules;
 using FaceDesk_Bot.Permissions;
+using System.Text.RegularExpressions;
 
 namespace FaceDesk_Bot
 {
@@ -163,11 +164,38 @@ namespace FaceDesk_Bot
       }
       else
       {
+        // Verify Auth
+        bool isAuthed = await GranularPermissions.GetAuthStatusFor(context.Guild.Id);
+        if(!isAuthed)
+        {
+          // Check for Auth attempt
+          string cmd = messageParam.Content.Substring(argPos);
+          Match m1 = Regex.Match(cmd, @"(auth )+(\w+)+$");
+          if (m1.Success)
+          {
+            int codeIndex = cmd.IndexOf("auth ");
+            string code = cmd.Substring(codeIndex);
+            await GranularPermissions.TryAuthFromContext(context, code);
+            return;
+          }
+          Match m2 = Regex.Match(cmd, @"(authorize )+(\w+)+$");
+          if(m2.Success)
+          {
+            int codeIndex = cmd.IndexOf("authorize ");
+            string code = cmd.Substring(codeIndex);
+            await GranularPermissions.TryAuthFromContext(context, code);
+            return;
+          }
+
+          await context.Channel.SendMessageAsync("This server is not authorized.");
+          return;
+        }
+
         var result = await MainCommandService.ExecuteAsync(context, argPos, _services);
         if (result.Error == CommandError.UnknownCommand) return;
         if (!result.IsSuccess)
         {
-          await application.Owner.SendMessageAsync(result.ErrorReason);
+          await application.Owner.SendMessageAsync("```" + messageParam.Content + "```\n" + result.ErrorReason);
         }
       }
     }
