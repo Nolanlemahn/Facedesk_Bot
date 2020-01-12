@@ -124,27 +124,27 @@ namespace FaceDesk_Bot.FD_MainModules
     [Summary("Pings discord.gg, and reports latency. If possible, also pings to voice server.")]
     public async Task Ping()
     {
-        Ping pinger = null;
-        PingReply reply = null;
+      Ping pinger = null;
+      PingReply reply = null;
 
-        try
-        {
-            pinger = new Ping();
-            reply = pinger.Send("discord.gg");
-        }
-        catch (PingException)
-        {
-            await this.Context.Channel.SendMessageAsync("⚠ Ping of `discord.gg` totally failed!");
-        }
-        finally
-        {
-            pinger?.Dispose();
-        }
+      try
+      {
+        pinger = new Ping();
+        reply = pinger.Send("discord.gg");
+      }
+      catch (PingException)
+      {
+        await this.Context.Channel.SendMessageAsync("⚠ Ping of `discord.gg` totally failed!");
+      }
+      finally
+      {
+        pinger?.Dispose();
+      }
 
-        await this.Context.Channel.SendMessageAsync("🏓 Pinged `discord.gg` in " + reply.RoundtripTime + " ms.");
+      await this.Context.Channel.SendMessageAsync("🏓 Pinged `discord.gg` in " + reply.RoundtripTime + " ms.");
 
 
-        var guildUser = this.Context.User as IGuildUser;
+      var guildUser = this.Context.User as IGuildUser;
     }
 
     [Command("vkick")]
@@ -206,10 +206,10 @@ namespace FaceDesk_Bot.FD_MainModules
       Task<bool> result = this.Context.IsOwner();
       if (!result.Result) return;
 
-      if(this.Context.Guild.GetUser(EntryPoint.Client.CurrentUser.Id).GetPermissions(this.Context.Channel as IGuildChannel).ManageMessages)
+      if (this.Context.Guild.GetUser(EntryPoint.Client.CurrentUser.Id).GetPermissions(this.Context.Channel as IGuildChannel).ManageMessages)
         await this.Context.Message.DeleteAsync();
 
-      var message = (RestUserMessage) await this.Context.Channel.GetMessageAsync(msgid);
+      var message = (RestUserMessage)await this.Context.Channel.GetMessageAsync(msgid);
       await message.ModifyAsync(msg => msg.Content = newmsg);
     }
 
@@ -326,7 +326,7 @@ namespace FaceDesk_Bot.FD_MainModules
       await Context.Message.DeleteAsync();
     }
 
-#region Word React
+    #region Word React
     private async void wreactHelper(string reaction, RestUserMessage rum)
     {
       reaction = reaction.ToUpper();
@@ -394,7 +394,7 @@ namespace FaceDesk_Bot.FD_MainModules
 
       wreactHelper(reaction, rum);
     }
-#endregion
+    #endregion
 
     [Command("gg")]
     [Summary("**Owner only**. Kills the bot.")]
@@ -461,7 +461,7 @@ namespace FaceDesk_Bot.FD_MainModules
       {
         if (!sgu.GuildPermissions.ManageMessages)
         {
-          List<ulong> mods = await GranularPermissions.GetChannelmodsFor(this.Context.Guild.Id, this.Context.Channel as ISocketMessageChannel);
+          List<ulong> mods = await GranularPermissionsStorage.GetChannelmodsFor(this.Context.Guild.Id, this.Context.Channel as ISocketMessageChannel);
 
           if (!mods.Contains(this.Context.User.Id))
           {
@@ -491,7 +491,7 @@ namespace FaceDesk_Bot.FD_MainModules
           await this.Context.Channel.SendMessageAsync("???");
         }
 
-          //static: run all timezones
+        //static: run all timezones
         if (zones.Equals("REZ"))
         {
           zones = "";
@@ -507,13 +507,13 @@ namespace FaceDesk_Bot.FD_MainModules
         string[] aZones = zones.Split(',');
         List<TimeZoneInfo> tzis = new List<TimeZoneInfo>();
         TimeZoneInfo otzi = null;
-          //UNIX system requires an IANA conversion
+        //UNIX system requires an IANA conversion
         if (Environment.OSVersion.Platform != PlatformID.Win32NT)
         {
           string stz = LocalExtensions.WindowsToIana(LookupData.TimeAbs[origzone]);
           otzi = TimeZoneInfo.FindSystemTimeZoneById(stz);
         }
-          //Windows system uses the dotNET/Windows internal table
+        //Windows system uses the dotNET/Windows internal table
         else
         {
           otzi = TimeZoneInfo.FindSystemTimeZoneById(LookupData.TimeAbs[origzone]);
@@ -546,7 +546,7 @@ namespace FaceDesk_Bot.FD_MainModules
           DateTime newTime = TimeZoneInfo.ConvertTime(utcTime, TimeZoneInfo.Utc, tzi);
           string head = "**" + aZones[i] + "** (" + LookupData.TimeAbs[aZones[i]] + ")";
           string body = "__" + newTime.ToString("h: mm tt") + "__";
-  
+
           if ((newTime.Date - result.Date).Days >= 0.99)
           {
             body += " [next day]";

@@ -19,7 +19,7 @@ namespace FaceDesk_Bot.Permissions
       Task<bool> result = this.Context.IsOwner();
       if (!result.Result) return;
 
-      bool authed = await GranularPermissions.GetAuthStatusFor(this.Context.Guild.Id);
+      bool authed = await GranularPermissionsStorage.GetAuthStatusFor(this.Context.Guild.Id);
 
       if(authed) await this.Context.Message.AddReactionAsync(new Emoji("👌"));
       else await this.Context.Message.AddReactionAsync(new Emoji("👎"));
@@ -32,7 +32,7 @@ namespace FaceDesk_Bot.Permissions
       Task<bool> result = this.Context.IsOwner();
       if (!result.Result) return;
 
-      await GranularPermissions.AddAuthCode(code);
+      await GranularPermissionsStorage.AddAuthCode(code);
       await this.Context.Message.AddReactionAsync(new Emoji("👌"));
     }
 
@@ -41,7 +41,7 @@ namespace FaceDesk_Bot.Permissions
     [Summary("Consumes an authorization code to use the bot with this server.")]
     public async Task Authorize([Summary("The authorization code")] string code)
     {
-      await GranularPermissions.TryAuthFromContext(this.Context, code);
+      await GranularPermissionsStorage.TryAuthFromContext(this.Context, code);
     }
     #endregion
 
@@ -53,7 +53,7 @@ namespace FaceDesk_Bot.Permissions
       [Summary("The user to add")] SocketGuildUser user,
       [Summary("The channel to add to")] SocketGuildChannel channel)
     {
-      List<ulong> mods = await GranularPermissions.GetChannelmodsFor(this.Context.Guild.Id, channel as ISocketMessageChannel);
+      List<ulong> mods = await GranularPermissionsStorage.GetChannelmodsFor(this.Context.Guild.Id, channel as ISocketMessageChannel);
 
       if (!mods.Contains(this.Context.User.Id))
       {
@@ -73,7 +73,7 @@ namespace FaceDesk_Bot.Permissions
       [Summary("The user to remove")] SocketGuildUser user,
       [Summary("The channel to add to")] SocketGuildChannel channel)
     {
-      List<ulong> mods = await GranularPermissions.GetChannelmodsFor(this.Context.Guild.Id, channel as ISocketMessageChannel);
+      List<ulong> mods = await GranularPermissionsStorage.GetChannelmodsFor(this.Context.Guild.Id, channel as ISocketMessageChannel);
 
       if (!mods.Contains(this.Context.User.Id))
       {
@@ -92,7 +92,7 @@ namespace FaceDesk_Bot.Permissions
     public async Task RemoveFromChannel(
       [Summary("The user to remove")] SocketGuildUser user)
     {
-      List<ulong> mods = await GranularPermissions.GetChannelmodsFor(this.Context.Guild.Id, this.Context.Channel);
+      List<ulong> mods = await GranularPermissionsStorage.GetChannelmodsFor(this.Context.Guild.Id, this.Context.Channel);
 
       if (!mods.Contains(this.Context.User.Id))
       {
@@ -112,12 +112,12 @@ namespace FaceDesk_Bot.Permissions
     public async Task Channelmod(
       [Summary("The user to cmod")] [Remainder] SocketGuildUser user)
     {
-      CollectionReference channelCollection = GranularPermissions.Db.Document(Convert.ToString(this.Context.Guild.Id)).Collection("channels");
+      CollectionReference channelCollection = GranularPermissionsStorage.Db.Document(Convert.ToString(this.Context.Guild.Id)).Collection("channels");
       DocumentReference channelDoc = channelCollection.Document(Convert.ToString(this.Context.Channel.Id));
 
       Dictionary<string, object> update = new Dictionary<string, object>();
 
-      List<ulong> mods = await GranularPermissions.GetChannelmodsFor(this.Context.Guild.Id, this.Context.Channel);
+      List<ulong> mods = await GranularPermissionsStorage.GetChannelmodsFor(this.Context.Guild.Id, this.Context.Channel);
       if (!mods.Contains(user.Id))
       {
         mods.Add(user.Id);
@@ -140,7 +140,7 @@ namespace FaceDesk_Bot.Permissions
     #endregion
   }
 
-  class GranularPermissions
+  class GranularPermissionsStorage
   {
     [FirestoreData]
     public struct AuthorizationStatus
@@ -162,7 +162,7 @@ namespace FaceDesk_Bot.Permissions
     #region auth
     public static async Task TryAuthFromContext(SocketCommandContext context, string code)
     {
-      bool authed = await GranularPermissions.GetAuthStatusFor(context.Guild.Id);
+      bool authed = await GranularPermissionsStorage.GetAuthStatusFor(context.Guild.Id);
 
       if (authed)
       {
@@ -171,7 +171,7 @@ namespace FaceDesk_Bot.Permissions
       }
       else
       {
-        bool codeConsumed = await GranularPermissions.TryConsumeAuthCode(context.Guild.Id, code);
+        bool codeConsumed = await GranularPermissionsStorage.TryConsumeAuthCode(context.Guild.Id, code);
 
         if (codeConsumed) await context.Message.AddReactionAsync(new Emoji("👌"));
         else
@@ -287,6 +287,7 @@ namespace FaceDesk_Bot.Permissions
       _fs = firestore;
 
       _guildAuthorized = new Dictionary<ulong, bool>();
+      _guildLastChecked = new Dictionary<ulong, DateTime>();
     }
   }
 }

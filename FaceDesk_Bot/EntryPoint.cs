@@ -9,7 +9,6 @@ using Discord.WebSocket;
 using Discord.Commands;
 using Discord.Rest;
 
-using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 
 using Google.Cloud.Firestore;
@@ -49,6 +48,12 @@ namespace FaceDesk_Bot
 
     private static void Main(string[] args) => new EntryPoint().StartAsync().GetAwaiter().GetResult();
 
+    private void FirebaseHookups()
+    {
+      GranularPermissionsStorage.Setup(Firestore);
+      FunStorage.Setup(Firestore);
+    }
+
     public async Task StartAsync()
     {
       // Find where we are executing from
@@ -59,6 +64,7 @@ namespace FaceDesk_Bot
       string projectid = File.ReadAllText(Path.Combine(RunningFolder, "nogit_firestoreproject.txt"));
       Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", "nogit_serviceaccount.json"); //this is unforgivable
       Firestore = FirestoreDb.Create(projectid);
+      FirebaseHookups();
       Console.WriteLine("Connected to Firestore (Hopefully).");
 
       // Grab the token
@@ -78,10 +84,10 @@ namespace FaceDesk_Bot
       Console.WriteLine("Commands installed.");
 
       await Client.LoginAsync(TokenType.Bot, token);
-      Console.WriteLine("Logged in.");
+      Console.WriteLine("Logged in: " + Client.LoginState);
 
       SimplePermissions.LoadOwners();
-      GranularPermissions.Setup(Firestore);
+
       Console.WriteLine("Permissions loaded.");
 
       await Client.StartAsync();
@@ -165,9 +171,10 @@ namespace FaceDesk_Bot
       else
       {
         // Verify Auth
-        bool isAuthed = await GranularPermissions.GetAuthStatusFor(context.Guild.Id);
+        bool isAuthed = await GranularPermissionsStorage.GetAuthStatusFor(context.Guild.Id);
         if(!isAuthed)
         {
+
           // Check for Auth attempt
           string cmd = messageParam.Content.Substring(argPos);
           Match m1 = Regex.Match(cmd, @"(auth )+(\w+)+$");
@@ -175,7 +182,7 @@ namespace FaceDesk_Bot
           {
             int codeIndex = cmd.IndexOf("auth ");
             string code = cmd.Substring(codeIndex);
-            await GranularPermissions.TryAuthFromContext(context, code);
+            await GranularPermissionsStorage.TryAuthFromContext(context, code);
             return;
           }
           Match m2 = Regex.Match(cmd, @"(authorize )+(\w+)+$");
@@ -183,7 +190,7 @@ namespace FaceDesk_Bot
           {
             int codeIndex = cmd.IndexOf("authorize ");
             string code = cmd.Substring(codeIndex);
-            await GranularPermissions.TryAuthFromContext(context, code);
+            await GranularPermissionsStorage.TryAuthFromContext(context, code);
             return;
           }
 

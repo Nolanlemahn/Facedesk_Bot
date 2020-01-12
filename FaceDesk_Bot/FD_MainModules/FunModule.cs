@@ -2,12 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
-using Discord.Rest;
 using Discord.WebSocket;
+using Google.Cloud.Firestore;
 
 namespace FaceDesk_Bot.FD_MainModules
 {
@@ -21,12 +20,41 @@ namespace FaceDesk_Bot.FD_MainModules
 
     private Random ballRandom = new Random();
 
+
+    [Command("8balldbg")]
+    [Summary("**Owner only**. Shows all 8ball result.")]
+    public async Task BallShow()
+    {
+      if (!this.Context.IsOwner().Result) return;
+
+      var ballResults = await FunStorage.Get8BallFor(this.Context.Guild.Id);
+
+      string msg = "";
+      foreach(var subcategory in ballResults)
+      {
+        foreach(var lineitem in subcategory)
+        {
+          msg += lineitem + '\n';
+          Console.WriteLine(lineitem);
+        }
+      }
+
+      await this.ReplyAsync(msg);
+    }
+
+    [Command("8balladd")]
+    [Summary("**Admin only**. Adds an 8ball result.")]
+    public async Task BallAdd(char type, [Remainder] string msg)
+    {
+
+    }
+
     [Command("8ball")]
     [Summary("Shakes the 8ball.")]
     public async Task BallShake()
     {
       SocketUser author = this.Context.Message.Author;
-      // Get the question - arbitrarily, question must have been in the previous 10 messages
+      // Get the question - arbitrarily, question must have been in the previous 10 messages (parsing for politeness
       IEnumerable<IMessage> previousMessages = await this.Context.Channel.GetMessagesAsync(10).Flatten();
       List<IMessage> authoredMessages = new List<IMessage>();
 
@@ -64,13 +92,14 @@ namespace FaceDesk_Bot.FD_MainModules
       {
         BallNeutralResponses = rawNeutResponses.Split('\n').ToList();
         BallAllResponses.Append(BallNeutralResponses);
-        BallAllResponses.Append(BallNeutralResponses);
+        BallAllResponses.Append(BallNeutralResponses); //This is not a typo.
       }
 
       List<string> randList =
-        // Get a random 8ball message in advance
+        // Get a random 8ball list
         BallAllResponses[ballRandom.Next(BallAllResponses.Count)];
 
+      // Select a random response
       string rand = randList[ballRandom.Next(randList.Count)];
 
       string shakingMessage = "*shooka shooka...*";
@@ -190,5 +219,35 @@ namespace FaceDesk_Bot.FD_MainModules
       }
     }
 
+  }
+
+  class FunStorage
+  {
+    private static FirestoreDb _fs;
+
+    public static CollectionReference Db => _fs.Collection("discord_bot");
+    private static string[] _ballResultTypes = { "positives", "negatives", "neutrals" };
+
+
+    public static async Task<List<List<string>>> Get8BallFor(ulong guildID)
+    {
+      CollectionReference channelCollection = Db.Document(Convert.ToString(guildID)).Collection("8ball");
+
+      DocumentReference messages = channelCollection.Document("messages");
+      DocumentSnapshot messagesSnapshot = await messages.GetSnapshotAsync();
+
+      List<List<string>> returnable = new List<List<string>>();
+      foreach (string btype in _ballResultTypes)
+      {
+        if(messagesSnapshot.TryGetValue(btype, out List<string> got)) returnable.Add(got);
+      }
+
+      return returnable;
+    }
+
+    public static void Setup(FirestoreDb firestore)
+    {
+      _fs = firestore;
+    }
   }
 }
