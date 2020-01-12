@@ -12,14 +12,11 @@ namespace FaceDesk_Bot.FD_MainModules
 {
   class FunModule : ModuleBase<SocketCommandContext>
   {
-    public static List<string> BallPositiveResponses; //+
-    public static List<string> BallNegativeResponses; //-
-    public static List<string> BallNeutralResponses;  //!, ?
-
-    public static List<List<string>> BallAllResponses;
+    public static List<string> BallGlobalPositiveResponses; //+
+    public static List<string> BallGlobalNegativeResponses; //-
+    public static List<string> BallGlobalNeutralResponses;  //!, ?
 
     private Random ballRandom = new Random();
-
 
     [Command("8balldbg")]
     [Summary("**Owner only**. Shows all 8ball result.")]
@@ -42,11 +39,25 @@ namespace FaceDesk_Bot.FD_MainModules
       await this.ReplyAsync(msg);
     }
 
+    private static char[] _positiveChars = { '+' };
+    private static char[] _negativeChars = { '-' };
+
     [Command("8balladd")]
     [Summary("**Admin only**. Adds an 8ball result.")]
-    public async Task BallAdd(char type, [Remainder] string msg)
+    [RequireUserPermission(GuildPermission.Administrator)]
+    public async Task BallAdd(char ballSymbol, [Remainder] string msg)
     {
+      msg = msg + " [" + ballSymbol + "]";
 
+      ulong gid = this.Context.Guild.Id;
+      string ballType = "neutrals";
+      if(_positiveChars.Contains(ballSymbol)) ballType = "positives";
+      else if(_negativeChars.Contains(ballSymbol)) ballType = "negatives";
+
+      bool success = await FunStorage.Insert8ballFor(gid, ballType, msg);
+
+      if (success) await this.Context.Message.AddReactionAsync(new Emoji("👌"));
+      else await this.Context.Message.AddReactionAsync(new Emoji("👎"));
     }
 
     [Command("8ball")]
@@ -54,16 +65,13 @@ namespace FaceDesk_Bot.FD_MainModules
     public async Task BallShake()
     {
       SocketUser author = this.Context.Message.Author;
-      // Get the question - arbitrarily, question must have been in the previous 10 messages (parsing for politeness
+      // Get the question - arbitrarily, question must have been in the previous 10 messages (parsing for politeness)
       IEnumerable<IMessage> previousMessages = await this.Context.Channel.GetMessagesAsync(10).Flatten();
       List<IMessage> authoredMessages = new List<IMessage>();
 
       foreach (IMessage previousMessage in previousMessages)
       {
-        if (previousMessage.Author.Id == author.Id)
-        {
-          authoredMessages.Add(previousMessage);
-        }
+        if (previousMessage.Author.Id == author.Id) authoredMessages.Add(previousMessage);
       }
 
       bool beNice = false;
@@ -79,25 +87,32 @@ namespace FaceDesk_Bot.FD_MainModules
       string rawNegResponses = File.ReadAllText(Path.Combine(eightballPath, "negative.txt"));
       string rawNeutResponses = File.ReadAllText(Path.Combine(eightballPath, "neutral.txt"));
 
-      BallPositiveResponses = rawPosResponses.Split('\n').ToList();
-      BallNegativeResponses = rawNegResponses.Split('\n').ToList();
-      BallAllResponses = new List<List<string>>
+      BallGlobalPositiveResponses = rawPosResponses.Split('\n').ToList();
+      BallGlobalNegativeResponses = rawNegResponses.Split('\n').ToList();
+
+      var ballResults = await FunStorage.Get8BallFor(this.Context.Guild.Id);
+
+      List<string> localPosResponses = ballResults[0]; localPosResponses.AddRange(BallGlobalPositiveResponses);
+      List<string> localNegResponses = ballResults[1]; localNegResponses.AddRange(BallGlobalNegativeResponses);
+
+      List<List<string>> responses = new List<List<string>>
       {
-        BallPositiveResponses,
-        BallNegativeResponses,
+        localPosResponses,
+        localNegResponses,
       };
 
       // If we aren't being nice in response to politeness, add the neutral responses
       if (!beNice)
       {
-        BallNeutralResponses = rawNeutResponses.Split('\n').ToList();
-        BallAllResponses.Append(BallNeutralResponses);
-        BallAllResponses.Append(BallNeutralResponses); //This is not a typo.
+        BallGlobalNeutralResponses = rawNeutResponses.Split('\n').ToList();
+        List<string> localNeutResponses = ballResults[2]; localNeutResponses.AddRange(BallGlobalNeutralResponses);
+        responses.Append(localNeutResponses);
+        responses.Append(localNeutResponses); //This is not a typo.
       }
 
       List<string> randList =
         // Get a random 8ball list
-        BallAllResponses[ballRandom.Next(BallAllResponses.Count)];
+        responses[ballRandom.Next(responses.Count)];
 
       // Select a random response
       string rand = randList[ballRandom.Next(randList.Count)];
@@ -239,10 +254,36 @@ namespace FaceDesk_Bot.FD_MainModules
       List<List<string>> returnable = new List<List<string>>();
       foreach (string btype in _ballResultTypes)
       {
-        if(messagesSnapshot.TryGetValue(btype, out List<string> got)) returnable.Add(got);
+        if (messagesSnapshot.TryGetValue(btype, out List<string> got)) returnable.Add(got);
+        else returnable.Add(new List<string>());
       }
 
       return returnable;
+    }
+
+    public static async Task<bool> Insert8ballFor(ulong guildID, string btype, string msg)
+    {
+      try
+      {
+        CollectionReference channelCollection = Db.Document(Convert.ToString(guildID)).Collection("8ball");
+
+        DocumentReference messages = channelCollection.Document("messages");
+        DocumentSnapshot messagesSnapshot = await messages.GetSnapshotAsync();
+
+        if (messagesSnapshot.TryGetValue(btype, out List<string> got))
+        {
+          got.Add(msg);
+        }
+        else got = new List<string>() { msg };
+        Dictionary<string, List<string>> update = new Dictionary<string, List<string>> { [btype] = got };
+        WriteResult wrire = await messages.SetAsync(update, SetOptions.MergeAll);
+
+        return true;
+      }
+      catch
+      {
+        return false;
+      }
     }
 
     public static void Setup(FirestoreDb firestore)
