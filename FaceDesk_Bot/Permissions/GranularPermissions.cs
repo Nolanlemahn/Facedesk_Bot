@@ -155,6 +155,7 @@ namespace FaceDesk_Bot.Permissions
     private static FirestoreDb _fs;
     private static Dictionary<ulong, bool> _guildAuthorized;
     private static Dictionary<ulong, DateTime> _guildLastChecked;
+    private static double _checkintInterval = 60;
 
     public static CollectionReference Db => _fs.Collection("discord_bot");
 
@@ -183,10 +184,18 @@ namespace FaceDesk_Bot.Permissions
 
     public static async Task<bool> GetAuthStatusFor(ulong guildID)
     {
+      // if successful auth cached, do not recheck database
       if (_guildAuthorized.GetValueOrDefault(guildID)) return true;
 
       DocumentReference guildDocument = Db.Document(Convert.ToString(guildID));
       DocumentSnapshot guildDocumentSnapshot = await guildDocument.GetSnapshotAsync();
+
+      // if it's been less than X seconds and failed auth cached, do not recheck database
+      if (_guildLastChecked.ContainsKey(guildID) &&
+        (DateTime.UtcNow - _guildLastChecked[guildID]).Duration() < TimeSpan.FromSeconds(_checkintInterval))
+      {
+        return false;
+      }
 
       if(guildDocumentSnapshot.Exists)
       {
@@ -194,8 +203,10 @@ namespace FaceDesk_Bot.Permissions
         bool isAuthorized = guildDocumentSnapshot.TryGetValue("authorized", out authorizeFetched);
 
         _guildAuthorized[guildID] = authorizeFetched && isAuthorized;
+        _guildLastChecked[guildID] = DateTime.UtcNow;
         return authorizeFetched && isAuthorized;
       }
+
       return false;
     }
 
