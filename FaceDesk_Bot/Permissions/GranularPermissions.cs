@@ -232,7 +232,7 @@ namespace FaceDesk_Bot.Permissions
       CollectionReference authDocument = Db.Document("_authorizeKeys").Collection(code);
       QuerySnapshot authDocumentSnapshot = await authDocument.GetSnapshotAsync();
 
-      if (authDocumentSnapshot.Count > 0)
+      if (authDocumentSnapshot.Documents.Count > 0)
       {
         DocumentSnapshot authDoc = authDocumentSnapshot.Documents[0];
         DocumentReference authRef = authDoc.Reference;

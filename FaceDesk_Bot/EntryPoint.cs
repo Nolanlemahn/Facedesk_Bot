@@ -176,23 +176,18 @@ namespace FaceDesk_Bot
         bool isAuthed = await GranularPermissionsStorage.GetAuthStatusFor(context.Guild.Id);
         if(!isAuthed)
         {
-
           // Check for Auth attempt
           string cmd = messageParam.Content.Substring(argPos);
-          Match m1 = Regex.Match(cmd, @"(auth )+(\w+)+$");
+          Match m1 = Regex.Match(cmd, @"(auth )+(\w+)");
           if (m1.Success)
           {
-            int codeIndex = cmd.IndexOf("auth ");
-            string code = cmd.Substring(codeIndex);
-            await GranularPermissionsStorage.TryAuthFromContext(context, code);
+            await GranularPermissionsStorage.TryAuthFromContext(context, cmd.Replace("auth ", ""));
             return;
           }
-          Match m2 = Regex.Match(cmd, @"(authorize )+(\w+)+$");
+          Match m2 = Regex.Match(cmd, @"(authorize )+(\w+)");
           if(m2.Success)
           {
-            int codeIndex = cmd.IndexOf("authorize ");
-            string code = cmd.Substring(codeIndex);
-            await GranularPermissionsStorage.TryAuthFromContext(context, code);
+            await GranularPermissionsStorage.TryAuthFromContext(context, cmd.Replace("authorize ", ""));
             return;
           }
 
