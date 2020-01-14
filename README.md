@@ -11,6 +11,8 @@ You should not trust me. You should host your own instance. This goes for absolu
 
 While I do insist that I am not logging your server and that I am a generally benevolent human being, you should take that with the same grain of salt as any other statement made by a stranger on the Internet. **Be careful.**
 
+(An exception: if a command you invoke is invalid for any reason, the command will be logged.)
+
 ## Primary Setup
 
 FDB will not respond to commands (asides from the authorization command itself) unless the commands are invoked from an authorized server.
