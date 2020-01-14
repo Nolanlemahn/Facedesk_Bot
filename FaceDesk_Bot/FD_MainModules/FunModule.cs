@@ -22,7 +22,7 @@ namespace FaceDesk_Bot.FD_MainModules
     [Summary("**Owner only**. Shows all 8ball result.")]
     public async Task BallShow()
     {
-      if (!this.Context.IsOwner().Result) return;
+      bool result = await this.Context.IsOwner(); if (!result) return;
 
       var ballResults = await FunStorage.Get8BallFor(this.Context.Guild.Id);
 

@@ -13,8 +13,7 @@ namespace FaceDesk_Bot.Permissions
     [Summary("**Owner only**. Reloads permissions.")]
     public async Task SpReload()
     {
-      Task<bool> result = this.Context.IsOwner();
-      if (!result.Result) return;
+      bool result = await this.Context.IsOwner(); if (!result) return;
 
       SimplePermissions.LoadOwners();
 

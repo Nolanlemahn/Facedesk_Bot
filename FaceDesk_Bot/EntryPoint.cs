@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 using Discord;
 using Discord.WebSocket;
@@ -16,7 +17,6 @@ using Google.Cloud.Firestore;
 //
 using FaceDesk_Bot.FD_MainModules;
 using FaceDesk_Bot.Permissions;
-using System.Text.RegularExpressions;
 
 namespace FaceDesk_Bot
 {
@@ -52,6 +52,7 @@ namespace FaceDesk_Bot
     {
       GranularPermissionsStorage.Setup(Firestore);
       FunStorage.Setup(Firestore);
+      AnnouncementsStorage.Setup(Firestore);
     }
 
     public async Task StartAsync()
@@ -108,6 +109,7 @@ namespace FaceDesk_Bot
       Client.MessageReceived += HandleCommandAsync;
       Client.MessageReceived += Responses.Responses.HandleCommandAsync;
 
+      await MainCommandService.AddModuleAsync(typeof(FD_MainModules.AnnouncementsModule));
       await MainCommandService.AddModuleAsync(typeof(FD_MainModules.UtilityModule));
       await MainCommandService.AddModuleAsync(typeof(FD_MainModules.FunModule));
       await MainCommandService.AddModuleAsync(typeof(Permissions.SimplePermissionsModule));

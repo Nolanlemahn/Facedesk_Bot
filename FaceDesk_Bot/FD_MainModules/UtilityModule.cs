@@ -203,8 +203,7 @@ namespace FaceDesk_Bot.FD_MainModules
       [Summary("The message id")] ulong msgid,
       [Summary("The new message text")] [Remainder] string newmsg)
     {
-      Task<bool> result = this.Context.IsOwner();
-      if (!result.Result) return;
+      bool result = await this.Context.IsOwner(); if (!result) return;
 
       if (this.Context.Guild.GetUser(EntryPoint.Client.CurrentUser.Id).GetPermissions(this.Context.Channel as IGuildChannel).ManageMessages)
         await this.Context.Message.DeleteAsync();
@@ -400,8 +399,8 @@ namespace FaceDesk_Bot.FD_MainModules
     [Summary("**Owner only**. Kills the bot.")]
     public async Task Gg()
     {
-      Task<bool> result = this.Context.IsOwner();
-      if (!result.Result) return;
+      bool result = await this.Context.IsOwner(); if (!result) return;
+
       await this.Context.Channel.SendMessageAsync("😭... Okay, bye for now! 👋");
       Environment.Exit(0);
     }
@@ -410,7 +409,7 @@ namespace FaceDesk_Bot.FD_MainModules
     [Summary("**Owner only**. DMs invoker with list of owners.")]
     public async Task Owners()
     {
-      if (!this.Context.IsOwner().Result) return;
+      bool result = await this.Context.IsOwner(); if (!result) return;
 
       List<ulong> owners = SimplePermissions.Owners;
 

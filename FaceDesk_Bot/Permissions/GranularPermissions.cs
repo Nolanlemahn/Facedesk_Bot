@@ -16,8 +16,7 @@ namespace FaceDesk_Bot.Permissions
     [Summary("**Owner only**. Checks authorization status.")]
     public async Task CheckAuth()
     {
-      Task<bool> result = this.Context.IsOwner();
-      if (!result.Result) return;
+      bool result = await this.Context.IsOwner(); if (!result) return;
 
       bool authed = await GranularPermissionsStorage.GetAuthStatusFor(this.Context.Guild.Id);
 
@@ -29,8 +28,7 @@ namespace FaceDesk_Bot.Permissions
     [Summary("**Owner only**. Adds an authorization code.")]
     public async Task AddKey([Summary("The authorization code")] string code)
     {
-      Task<bool> result = this.Context.IsOwner();
-      if (!result.Result) return;
+      bool result = await this.Context.IsOwner(); if (!result) return;
 
       await GranularPermissionsStorage.AddAuthCode(code);
       await this.Context.Message.AddReactionAsync(new Emoji("👌"));
@@ -187,9 +185,6 @@ namespace FaceDesk_Bot.Permissions
       // if successful auth cached, do not recheck database
       if (_guildAuthorized.GetValueOrDefault(guildID)) return true;
 
-      DocumentReference guildDocument = Db.Document(Convert.ToString(guildID));
-      DocumentSnapshot guildDocumentSnapshot = await guildDocument.GetSnapshotAsync();
-
       // if it's been less than X seconds and failed auth cached, do not recheck database
       if (_guildLastChecked.ContainsKey(guildID) &&
         (DateTime.UtcNow - _guildLastChecked[guildID]).Duration() < TimeSpan.FromSeconds(_checkintInterval))
@@ -197,7 +192,10 @@ namespace FaceDesk_Bot.Permissions
         return false;
       }
 
-      if(guildDocumentSnapshot.Exists)
+      DocumentReference guildDocument = Db.Document(Convert.ToString(guildID)).Collection("lite").Document("data");
+      DocumentSnapshot guildDocumentSnapshot = await guildDocument.GetSnapshotAsync();
+
+      if (guildDocumentSnapshot.Exists)
       {
         bool authorizeFetched;
         bool isAuthorized = guildDocumentSnapshot.TryGetValue("authorized", out authorizeFetched);
@@ -212,14 +210,14 @@ namespace FaceDesk_Bot.Permissions
 
     public static async Task SetAuthFor(ulong guildID, bool status)
     {
-      DocumentReference guildDocument = Db.Document(Convert.ToString(guildID));
+      DocumentReference guildCollection = Db.Document(Convert.ToString(guildID)).Collection("lite").Document("data");
 
       Dictionary<string, object> update = new Dictionary<string, object>
       {
         ["authorized"] = status
       };
 
-      await guildDocument.SetAsync(update, SetOptions.MergeAll);
+      await guildCollection.SetAsync(update, SetOptions.MergeAll);
     }
 
     public static async Task AddAuthCode(string code)
