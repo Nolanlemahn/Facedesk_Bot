@@ -199,7 +199,8 @@ namespace FaceDesk_Bot
         if (result.Error == CommandError.UnknownCommand) return;
         if (!result.IsSuccess)
         {
-          await application.Owner.SendMessageAsync("```" + messageParam.Content + "```\n" + result.ErrorReason);
+          //TODO: log error to txt file/firestore
+          await context.Channel.SendMessageAsync("```" + messageParam.Content + "```\n" + result.ErrorReason);
         }
       }
     }
