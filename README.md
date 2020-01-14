@@ -17,11 +17,11 @@ FDB will not respond to commands (asides from the authorization command itself) 
 
 ### Authorization
 
-`^auth YourKey` will authorize your server when invoked from any channel that FDB can read from. I am not currently distributing authorization keys. No particular permissions are required.
+`^auth YourKey` will authorize your server when invoked from any channel that FDB can read from. *I am not currently distributing authorization keys.* No particular permissions are required.
 
 ### Un/Subscribing to Announcements
 
-`^setann #SomeChannelHere` will setup a channel for FDB to send announcements to. (Only one such channel may exist at a time.) `^unsetann` will unsubscribe the channel. **You must be an Admin.**
+`^setann #SomeChannelHere` will setup a channel for FDB to send announcements to. (Only one such channel may exist at a time.) These announcements will include notices of major updates and planned downtime. `^unsetann` will unsubscribe the channel. **You must be an Admin.**
 
 ### Expanding the 8ball
 
