@@ -163,15 +163,19 @@ namespace FaceDesk_Bot.FD_MainModules
 
     [Command("allhelp")]
     [Summary("Prints everything this bot can do.")]
-    public async Task AllHelp()
+    public async Task AllHelp([Summary("The page to pull")] int page)
     {
+      List<CommandInfo> commandCopy = EntryPoint.MainCommandService.Commands.OrderBy(c => c.Name).ToList();
+
       var ebh = new EmbedBuilder();
       ebh.WithTitle("FaceDesk_Bot Command Help");
-      ebh.WithDescription("Here are all of the commands the bot is capable of doing.\n\n");
+      ebh.WithDescription($"Here are all of the commands the bot is capable of doing.\n(Page {page} of {commandCopy.Count / 25 + 1})");
 
-      List<CommandInfo> commandCopy = EntryPoint.MainCommandService.Commands.OrderBy(c => c.Name).ToList();
-      foreach (var command in commandCopy)
+      for(int i = (page - 1) * 25; i < (page * 25); i++)
       {
+        CommandInfo command = commandCopy.ElementAtOrDefault(i);
+        if (command == default) continue;
+
         string realSummary = "";
         int paramCounter = 1;
         foreach (var parameter in command.Parameters)
@@ -185,9 +189,9 @@ namespace FaceDesk_Bot.FD_MainModules
         {
           realSummary += ("[" + EntryPoint.Prefix + alias + "] ");
         }
-        for (int i = 1; i < paramCounter; i++)
+        for (int j = 1; j < paramCounter; j++)
         {
-          realSummary += "+ param" + i + " ";
+          realSummary += "+ param" + j + " ";
         }
         realSummary += ("`\n*" + command.Summary + "*" + "\n\n");
 
