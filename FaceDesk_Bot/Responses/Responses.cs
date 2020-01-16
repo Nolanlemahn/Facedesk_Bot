@@ -7,7 +7,12 @@ namespace FaceDesk_Bot.Responses
 {
     class Responses
     {
-      public static async Task HandleCommandAsync(SocketMessage messageParam)
+      public static async Task HandleUserJoinAsync(SocketGuildUser joiner)
+      {
+
+      }
+
+      public static async Task HandleMessageAsync(SocketMessage messageParam)
       {
         var Client = EntryPoint.Client;
         var message = messageParam as SocketUserMessage;

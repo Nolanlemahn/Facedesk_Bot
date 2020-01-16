@@ -107,15 +107,17 @@ namespace FaceDesk_Bot
 
       //Client.MessageReceived += AutoReact.AutoReactAsync;
       Client.MessageReceived += HandleCommandAsync;
-      Client.MessageReceived += Responses.Responses.HandleCommandAsync;
+      Client.MessageReceived += Responses.Responses.HandleMessageAsync;
+      Client.UserJoined += Responses.Responses.HandleUserJoinAsync;
 
       await MainCommandService.AddModuleAsync(typeof(FD_MainModules.AnnouncementsModule));
+      await MainCommandService.AddModuleAsync(typeof(FD_MainModules.ReactModule));
+      await MainCommandService.AddModuleAsync(typeof(FD_MainModules.SystemModule));
       await MainCommandService.AddModuleAsync(typeof(FD_MainModules.UtilityModule));
       await MainCommandService.AddModuleAsync(typeof(FD_MainModules.FunModule));
+
       await MainCommandService.AddModuleAsync(typeof(Permissions.SimplePermissionsModule));
       await MainCommandService.AddModuleAsync(typeof(Permissions.GranularPermissionsModule));
-
-      await MainCommandService.AddModuleAsync(typeof(FD_MainModules.CNModule));
 
       //await MainCommandService.AddModulesAsync(Assembly.GetEntryAssembly());
     }

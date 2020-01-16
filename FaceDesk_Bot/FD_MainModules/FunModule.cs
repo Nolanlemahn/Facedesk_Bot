@@ -135,13 +135,6 @@ namespace FaceDesk_Bot.FD_MainModules
       await message.ModifyAsync(msg => msg.Content = rand);
     }
 
-    [Command("gender")]
-    [Summary("Prints the bots gender identity.")]
-    public async Task Gender()
-    {
-      await this.Context.Channel.SendMessageAsync("🎶 _I'm a **bitch**, I'm a **lover**_ 🎶");
-    }
-
     [Command("vore")]
     [Summary("Vores the given user.")]
     public async Task Vore(
