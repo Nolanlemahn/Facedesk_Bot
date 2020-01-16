@@ -166,7 +166,8 @@ namespace FaceDesk_Bot.FD_MainModules
         var ebh = new EmbedBuilder();
         ebh.WithTitle($"FaceDesk_Bot Help ({mi.Name})");
 
-        foreach (CommandInfo command in mi.Commands) ebh.AddField(command.Name, SummaryFromCommand(command));
+        List<CommandInfo> commandCopy = mi.Commands.OrderBy(c => c.Name).ToList();
+        foreach (CommandInfo command in commandCopy) ebh.AddField(command.Name, SummaryFromCommand(command));
 
         await this.Context.DebugPublicReleasePrivate("", false, ebh);
       }
