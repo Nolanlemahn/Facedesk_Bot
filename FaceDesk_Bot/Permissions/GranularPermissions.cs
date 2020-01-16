@@ -136,6 +136,21 @@ namespace FaceDesk_Bot.Permissions
       }
     }
     #endregion
+
+    #region server
+    [Command("defaultrole")]
+    [Alias("drole")]
+    [Summary("**Admin only**. (Bot requires Manage Messages.) Marks/unmarks a role to be assigned to all joining users.")]
+    [RequireUserPermission(GuildPermission.Administrator)]
+    [RequireBotPermission(GuildPermission.ManageRoles)]
+    public async Task DefaultRole(SocketRole role)
+    {
+      bool success = await GranularPermissionsStorage.SetDefaultRole(this.Context.Guild.Id, role);
+
+      if (success) await this.Context.Message.AddReactionAsync(new Emoji("👌"));
+      else await this.Context.Message.AddReactionAsync(new Emoji("👎"));
+    }
+    #endregion
   }
 
   class GranularPermissionsStorage
@@ -278,6 +293,38 @@ namespace FaceDesk_Bot.Permissions
       }
 
       return new List<ulong>();
+    }
+
+    public static async Task<bool> SetDefaultRole(ulong guildID, SocketRole role)
+    {
+      try
+      {
+        DocumentReference guildDocument = Db.Document(Convert.ToString(guildID)).Collection("lite").Document("data");
+        DocumentSnapshot guildSnapshot = await guildDocument.GetSnapshotAsync();
+        guildSnapshot.TryGetValue("defaultRoles", out List<ulong> defaultRoles);
+
+        if (defaultRoles == null) defaultRoles = new List<ulong>();
+        if (!defaultRoles.Contains(role.Id)) defaultRoles.Add(role.Id);
+        else defaultRoles.Remove(role.Id);
+
+        Dictionary<string, List<ulong>> update = new Dictionary<string, List<ulong>> { ["defaultRoles"] = defaultRoles };
+        WriteResult wrire = await guildDocument.SetAsync(update, SetOptions.MergeAll);
+
+        return true;
+      }
+      catch
+      {
+        return false;
+      }
+    }
+
+    public static async Task<List<ulong>> GetDefaultRoles(ulong guildID)
+    {
+      DocumentReference guildDocument = Db.Document(Convert.ToString(guildID)).Collection("lite").Document("data");
+      DocumentSnapshot guildSnapshot = await guildDocument.GetSnapshotAsync();
+      guildSnapshot.TryGetValue("defaultRoles", out List<ulong> defaultRoles);
+
+      return defaultRoles;
     }
 
     public static void Setup(FirestoreDb firestore)

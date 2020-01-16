@@ -108,6 +108,7 @@ namespace FaceDesk_Bot.FD_MainModules
     {
       ["announcement"] = typeof(AnnouncementsModule),
       ["fun"] = typeof(FunModule),
+      ["permissions"] = typeof(GranularPermissionsModule),
       ["react"] = typeof(ReactModule),
       ["system"] = typeof(SystemModule),
       ["utility"] = typeof(UtilityModule)
@@ -240,7 +241,7 @@ namespace FaceDesk_Bot.FD_MainModules
   
 
     [Command("cleanup")]
-    [Summary("**Admin only**. Kicks all users without roles.")]
+    [Summary("**Admin only**. (Bot requires Admin.) Kicks all users without roles.")]
     [RequireUserPermission(GuildPermission.Administrator)]
     [RequireBotPermission(GuildPermission.Administrator)]
     public async Task Cleanup()
@@ -269,7 +270,7 @@ namespace FaceDesk_Bot.FD_MainModules
 
     [Command("prune")]
     [Alias("purge")]
-    [Summary("**Requires Manage Messages**. __User requires cmod or Manage Messages__. Deletes a specified amount of messages in the channel.")]
+    [Summary("**Requires Channelmod or Manage Messages**. (Bot requires Manage Messages.) Deletes a specified amount of messages in the channel.")]
     [RequireBotPermission(GuildPermission.ManageMessages)]
     public async Task Prune([Summary("Number of messages to delete.")] int delnum)
     {

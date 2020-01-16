@@ -45,7 +45,7 @@ namespace FaceDesk_Bot.FD_MainModules
     [Command("8balladd")]
     [Summary("**Admin only**. Adds an 8ball result.")]
     [RequireUserPermission(GuildPermission.Administrator)]
-    public async Task BallAdd(char ballSymbol, [Remainder] string msg)
+    public async Task BallAdd([Summary("The type of response (+/-/?)")] char ballSymbol, [Remainder] [Summary("The actual response")] string msg)
     {
       msg = msg + " [" + ballSymbol + "]";
 
@@ -258,9 +258,9 @@ namespace FaceDesk_Bot.FD_MainModules
     {
       try
       {
-        CollectionReference channelCollection = Db.Document(Convert.ToString(guildID)).Collection("8ball");
+        CollectionReference ballCollection = Db.Document(Convert.ToString(guildID)).Collection("8ball");
 
-        DocumentReference messages = channelCollection.Document("messages");
+        DocumentReference messages = ballCollection.Document("messages");
         DocumentSnapshot messagesSnapshot = await messages.GetSnapshotAsync();
 
         if (messagesSnapshot.TryGetValue(btype, out List<string> got))

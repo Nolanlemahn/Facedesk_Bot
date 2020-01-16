@@ -15,7 +15,7 @@ namespace FaceDesk_Bot.FD_MainModules
     [Alias("setann")]
     [Summary("**Admin only**. Marks a channel for receiving FDB announcements.")]
     [RequireUserPermission(GuildPermission.Administrator)]
-    public async Task SetAnnouncementChannel(SocketChannel chan)
+    public async Task SetAnnouncementChannel([Summary("The channel to mark")] SocketChannel chan)
     {
       bool result = await AnnouncementsStorage.SetAnnouncementsFor(this.Context.Guild.Id, chan);
       if (result) await this.Context.Message.AddReactionAsync(new Emoji("👌"));
@@ -36,7 +36,7 @@ namespace FaceDesk_Bot.FD_MainModules
     [Command("announce")]
     [Alias("ann")]
     [Summary("**Owner only**. Fires an FDB announcement.")]
-    public async Task Announce([Remainder] string msg)
+    public async Task Announce([Remainder] [Summary("The announcement to make")] string msg)
     {
       await AnnouncementsStorage.AnnounceGlobal(msg);
     }
