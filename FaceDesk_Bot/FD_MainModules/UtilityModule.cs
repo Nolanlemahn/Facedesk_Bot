@@ -277,7 +277,19 @@ namespace FaceDesk_Bot.FD_MainModules
     {
       if (Context.User is SocketGuildUser sgu)
       {
-        if (!sgu.GuildPermissions.ManageMessages)
+        bool manageMessagesChannel()
+        {
+          SocketGuildChannel sgc = Context.Guild.Channels.FirstOrDefault(x => x.Id == Context.Channel.Id);
+
+          if (sgc != default)
+          {
+            return sgu.GetPermissions(sgc).ManageMessages;
+          }
+
+          return false;
+        }
+
+        if (!manageMessagesChannel() && !sgu.GuildPermissions.ManageMessages)
         {
           List<ulong> mods = await GranularPermissionsStorage.GetChannelmodsFor(this.Context.Guild.Id, this.Context.Channel as ISocketMessageChannel);
 
