@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -137,13 +138,63 @@ namespace FaceDesk_Bot.Permissions
     }
     #endregion
 
+
+    #region selfassign
+
+    [Command("selfassignable")]
+    [Alias("sassable")]
+    [Summary("**Admin only**. (Bot requires Manage Roles.) Mark a role as self-assignable. If a role isn't specified, the role will be unmarked.")]
+    [RequireUserPermission(GuildPermission.Administrator)]
+    [RequireBotPermission(GuildPermission.ManageRoles)]
+    public async Task MarkSelfassignable([Summary("The code to add the role as")] string code, [Summary("The role itself")] SocketRole role = null)
+    {
+      bool success = await GranularPermissionsStorage.SetSelfassignable(this.Context.Guild.Id, code, role);
+
+      if (success) await this.Context.Message.AddReactionAsync(new Emoji("👌"));
+      else await this.Context.Message.AddReactionAsync(new Emoji("👎"));
+    }
+
+    [Command("selfassignme")]
+    [Alias("sassme")]
+    [Summary("**(Bot requires Manage Roles.) Attempt to self-assign a role by code.")]
+    [RequireBotPermission(GuildPermission.ManageRoles)]
+    public async Task SelfassignMe([Summary("The code")] string code)
+    {
+      Dictionary<string, ulong> sassables = await GranularPermissionsStorage.GetSelfassignable(this.Context.Guild.Id);
+
+      Console.WriteLine(code + sassables.ContainsKey(code));
+      if (sassables != null && sassables.ContainsKey(code))
+      {
+        SocketGuildUser sgu = this.Context.User as SocketGuildUser;
+        if (sgu != null)
+        {
+          IEnumerable<SocketRole> rolesToAssign = sgu.Guild.Roles.Where(x => x.Id == sassables[code]);
+          await sgu.AddRolesAsync(rolesToAssign);
+          await this.Context.Message.AddReactionAsync(new Emoji("👌"));
+          return;
+        }
+        else
+        {
+          Console.WriteLine("no sgu");
+          await this.Context.Message.AddReactionAsync(new Emoji("👎"));
+        }
+      }
+      else
+      {
+        Console.WriteLine("no dict");
+        await this.Context.Message.AddReactionAsync(new Emoji("👎"));
+      }
+    }
+
+    #endregion
+
     #region server
     [Command("defaultrole")]
     [Alias("drole")]
-    [Summary("**Admin only**. (Bot requires Manage Messages.) Marks/unmarks a role to be assigned to all joining users.")]
+    [Summary("**Admin only**. (Bot requires Manage Roles.) Marks/unmarks a role to be assigned to all joining users.")]
     [RequireUserPermission(GuildPermission.Administrator)]
     [RequireBotPermission(GuildPermission.ManageRoles)]
-    public async Task DefaultRole(SocketRole role)
+    public async Task DefaultRole([Summary("The role to make default")] SocketRole role)
     {
       bool success = await GranularPermissionsStorage.SetDefaultRole(this.Context.Guild.Id, role);
 
@@ -295,6 +346,7 @@ namespace FaceDesk_Bot.Permissions
       return new List<ulong>();
     }
 
+    #region defaultroles
     public static async Task<bool> SetDefaultRole(ulong guildID, SocketRole role)
     {
       try
@@ -326,6 +378,55 @@ namespace FaceDesk_Bot.Permissions
 
       return defaultRoles;
     }
+    #endregion
+
+    #region selfassign
+    public static async Task<bool> SetSelfassignable(ulong guildID, string code, SocketRole role)
+    {
+      try
+      {
+        DocumentReference guildDocument = Db.Document(Convert.ToString(guildID)).Collection("lite").Document("data");
+        DocumentSnapshot guildSnapshot = await guildDocument.GetSnapshotAsync();
+        guildSnapshot.TryGetValue("selfAssignable", out Dictionary<string, object> selfAssignables);
+
+        if (selfAssignables == null) selfAssignables = new Dictionary<string, object>();
+
+        if (selfAssignables.ContainsKey(code) && role == null)
+        {
+          selfAssignables[code] = null;
+        }
+        else selfAssignables[code] = role.Id;
+
+        Dictionary<string, Dictionary<string, object>> update = new Dictionary<string, Dictionary<string, object>> { ["selfAssignable"] = selfAssignables };
+        WriteResult wrire = await guildDocument.SetAsync(update, SetOptions.MergeAll);
+
+        return true;
+      }
+      catch
+      {
+        return false;
+      }
+    }
+
+    public static async Task<Dictionary<string, ulong>> GetSelfassignable(ulong guildID)
+    {
+      DocumentReference guildDocument = Db.Document(Convert.ToString(guildID)).Collection("lite").Document("data");
+      DocumentSnapshot guildSnapshot = await guildDocument.GetSnapshotAsync();
+      guildSnapshot.TryGetValue("selfAssignable", out Dictionary<string, object> selfAssignablesUncasted);
+
+      Dictionary<string, ulong> selfAssignablesCasted = new Dictionary<string, ulong>();
+
+      foreach(KeyValuePair<string, object> kvp in selfAssignablesUncasted)
+      {
+        if (kvp.Value == null) continue;
+
+        ulong roleID = Convert.ToUInt64(kvp.Value);
+        selfAssignablesCasted[kvp.Key] = roleID;
+      }
+
+      return selfAssignablesCasted;
+    }
+    #endregion
 
     public static void Setup(FirestoreDb firestore)
     {

@@ -305,9 +305,9 @@ namespace FaceDesk_Bot.FD_MainModules
       await this.Context.Channel.DeleteMessagesAsync(items);
     }
 
-    [Command("timespit")]
+    [Command("timezone")]
     [Summary("Converts a time into other timezones.")]
-    public async Task Timespit(
+    public async Task Timezone(
       [Summary("The time to convert")] string time,
       [Summary("The timezone of the original timezone")] string origzone,
       [Remainder] [Summary("Other timezones, separated by commas")] string zones)
