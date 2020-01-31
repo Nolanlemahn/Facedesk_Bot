@@ -162,7 +162,6 @@ namespace FaceDesk_Bot.Permissions
     {
       Dictionary<string, ulong> sassables = await GranularPermissionsStorage.GetSelfassignable(this.Context.Guild.Id);
 
-      Console.WriteLine(code + sassables.ContainsKey(code));
       if (sassables != null && sassables.ContainsKey(code))
       {
         SocketGuildUser sgu = this.Context.User as SocketGuildUser;
@@ -175,17 +174,43 @@ namespace FaceDesk_Bot.Permissions
         }
         else
         {
-          Console.WriteLine("no sgu");
           await this.Context.Message.AddReactionAsync(new Emoji("👎"));
         }
       }
       else
       {
-        Console.WriteLine("no dict");
         await this.Context.Message.AddReactionAsync(new Emoji("👎"));
       }
     }
 
+    [Command("unselfassignme")]
+    [Alias("unsassme")]
+    [Summary("**(Bot requires Manage Roles.) Attempt to self-assign a role by code.")]
+    [RequireBotPermission(GuildPermission.ManageRoles)]
+    public async Task UnselfassignMe([Summary("The code")] string code)
+    {
+      Dictionary<string, ulong> sassables = await GranularPermissionsStorage.GetSelfassignable(this.Context.Guild.Id);
+
+      if (sassables != null && sassables.ContainsKey(code))
+      {
+        SocketGuildUser sgu = this.Context.User as SocketGuildUser;
+        if (sgu != null)
+        {
+          IEnumerable<SocketRole> rolesToRemove = sgu.Guild.Roles.Where(x => x.Id == sassables[code]);
+          await sgu.RemoveRolesAsync(rolesToRemove);
+          await this.Context.Message.AddReactionAsync(new Emoji("👌"));
+          return;
+        }
+        else
+        {
+          await this.Context.Message.AddReactionAsync(new Emoji("👎"));
+        }
+      }
+      else
+      {
+        await this.Context.Message.AddReactionAsync(new Emoji("👎"));
+      }
+    }
     #endregion
 
     #region server
