@@ -279,7 +279,7 @@ namespace FaceDesk_Bot.FD_MainModules
       if(stc != default)
       {
         RestInviteMetadata invite = await stc.CreateInviteAsync(
-          TimeSpan.FromDays(1).Seconds,
+          86400,
           1,
           false,
           true);
