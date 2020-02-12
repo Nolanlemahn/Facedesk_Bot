@@ -268,6 +268,28 @@ namespace FaceDesk_Bot.FD_MainModules
     }
 
     //--
+    [Command("1timeinvite")]
+    [Alias("1ti")]
+    [Summary("**Requires Create Invite**. (Bot requires Create Invite.) Creates a 1-time 24-hour invite.")]
+    [RequireUserPermission(GuildPermission.CreateInstantInvite)]
+    [RequireBotPermission(GuildPermission.CreateInstantInvite)]
+    public async Task Invite()
+    {
+      SocketTextChannel stc = this.Context.Channel as SocketTextChannel;
+      if(stc != default)
+      {
+        RestInviteMetadata invite = await stc.CreateInviteAsync(
+          TimeSpan.FromDays(1).Seconds,
+          1,
+          false,
+          true);
+
+        await this.Context.DebugPublicReleasePrivate(invite.Url, false);
+        await this.Context.Message.AddReactionAsync(new Emoji("👍"));
+      }
+      else await this.Context.Message.AddReactionAsync(new Emoji("❓"));
+    }
+
 
     [Command("prune")]
     [Alias("purge")]
