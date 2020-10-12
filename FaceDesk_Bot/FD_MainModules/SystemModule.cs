@@ -13,6 +13,7 @@ namespace FaceDesk_Bot.FD_MainModules
   class SystemModule : ModuleBase<SocketCommandContext>
   {
     [Command("memory")]
+    [Alias("ram")]
     [Summary("Shows RAM usage.")]
     public async Task Memory()
     {

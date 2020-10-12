@@ -37,6 +37,27 @@ namespace FaceDesk_Bot
        false;
 #endif
 
+        /*
+
+      await MainCommandService.AddModuleAsync(typeof(FD_MainModules.FunModule));
+
+      await MainCommandService.AddModuleAsync(typeof(Permissions.SimplePermissionsModule));
+      await MainCommandService.AddModuleAsync(typeof(Permissions.GranularPermissionsModule));
+         */
+    private static Type[] EnabledModules =
+    {
+      typeof(FD_MainModules.AnnouncementsModule),
+      typeof(FD_MainModules.ReactModule),
+      typeof(FD_MainModules.SystemModule),
+      typeof(FD_MainModules.UtilityModule),
+      typeof(FD_MainModules.FunModule),
+      typeof(FD_MainModules.HelpModule),
+      typeof(FD_MainModules.UserModule),
+
+      typeof(Permissions.SimplePermissionsModule),
+      typeof(Permissions.GranularPermissionsModule),
+    };
+
     public static string RunningFolder;
 
     public static CommandService MainCommandService;
@@ -110,16 +131,10 @@ namespace FaceDesk_Bot
       Client.MessageReceived += Responses.Responses.HandleMessageAsync;
       Client.UserJoined += Responses.Responses.HandleUserJoinAsync;
 
-      await MainCommandService.AddModuleAsync(typeof(FD_MainModules.AnnouncementsModule));
-      await MainCommandService.AddModuleAsync(typeof(FD_MainModules.ReactModule));
-      await MainCommandService.AddModuleAsync(typeof(FD_MainModules.SystemModule));
-      await MainCommandService.AddModuleAsync(typeof(FD_MainModules.UtilityModule));
-      await MainCommandService.AddModuleAsync(typeof(FD_MainModules.FunModule));
-
-      await MainCommandService.AddModuleAsync(typeof(Permissions.SimplePermissionsModule));
-      await MainCommandService.AddModuleAsync(typeof(Permissions.GranularPermissionsModule));
-
-      //await MainCommandService.AddModulesAsync(Assembly.GetEntryAssembly());
+      foreach(Type t in EnabledModules)
+      {
+        await MainCommandService.AddModuleAsync(t);
+      }
     }
 
     private PreprocessType ShouldPreprocessMessage(SocketUserMessage msg)
