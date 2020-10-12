@@ -335,11 +335,15 @@ namespace FaceDesk_Bot.FD_MainModules
 
       IReadOnlyCollection<SocketGuildUser> allUsers = this.Context.Guild.Users;
 
+      var message = await this.Context.Channel.SendMessageAsync("Please wait...");
+      string content = "";
+
       foreach (SocketGuildUser user in allUsers)
       {
         if (user.Roles.Contains(role))
         {
-          await Context.Channel.SendMessageAsync(user.Username + "." + user.Discriminator + " is losing that role.");
+          content += user.Username + "." + user.Discriminator + " is losing that role.\n";
+          await message.ModifyAsync(msg => msg.Content = content);
           await user.RemoveRoleAsync(role);
         }
       }
