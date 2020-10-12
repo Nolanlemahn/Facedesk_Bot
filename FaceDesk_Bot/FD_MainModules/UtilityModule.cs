@@ -323,6 +323,19 @@ namespace FaceDesk_Bot.FD_MainModules
       }
     }
 
+    [Command("delete_role")]
+    [Alias("delr", "nuker")]
+    [Summary("**Admin only**. DELETES A ROLE.")]
+    [RequireUserPermission(GuildPermission.Administrator)]
+    [RequireBotPermission(GuildPermission.Administrator)]
+    public async Task DeleteRole(SocketRole role)
+    {
+      string message = $"Attempting to delete `{role.Name}`, `{role.Id}`.";
+
+      await this.Context.Channel.SendMessageAsync(message);
+      await role.DeleteAsync();
+    }
+
     [Command("zero_out")]
     [Alias("zero_out", "zo")]
     [Summary("**Admin only**. Zeros out a role.")]
