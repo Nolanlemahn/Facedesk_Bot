@@ -77,7 +77,7 @@ namespace FaceDesk_Bot.FD_MainModules
                 List<CommandInfo> commandCopy = mi.Commands.OrderBy(c => c.Name).ToList();
                 foreach (CommandInfo command in commandCopy) ebh.AddField(command.Name, SummaryFromCommand(command));
 
-                await this.Context.DebugPublicReleasePrivate("", false, ebh);
+                await this.Context.DebugPublicReleasePrivate("", false, ebh.Build());
             }
             else
             {
@@ -103,7 +103,7 @@ namespace FaceDesk_Bot.FD_MainModules
                 ebh.AddField(command.Name, SummaryFromCommand(command));
             }
 
-            await this.Context.DebugPublicReleasePrivate("", false, ebh);
+            await this.Context.DebugPublicReleasePrivate("", false, ebh.Build());
         }
     }
 }

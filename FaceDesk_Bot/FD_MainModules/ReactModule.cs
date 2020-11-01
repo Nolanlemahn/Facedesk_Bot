@@ -32,7 +32,7 @@ namespace FaceDesk_Bot.FD_MainModules
     [Summary("Adds a pollreaction to the previous message")]
     public async Task Preact()
     {
-      var items = await Context.Channel.GetMessagesAsync(2).Flatten();
+      var items = await Context.Channel.GetMessagesAsync(2).FlattenAsync();
       int i = 0;
       foreach (IMessage message in items)
       {
@@ -74,7 +74,7 @@ namespace FaceDesk_Bot.FD_MainModules
     {
       IEmote res = InterfacedEmoteConstructor(reaction);
 
-      var items = await Context.Channel.GetMessagesAsync(2).Flatten();
+      var items = await Context.Channel.GetMessagesAsync(2).FlattenAsync();
       int i = 0;
       foreach (IMessage message in items)
       {
@@ -151,7 +151,7 @@ namespace FaceDesk_Bot.FD_MainModules
       [Summary("The reaction")] [Remainder] string reaction)
     {
       RestUserMessage rum = null;
-      var items = await Context.Channel.GetMessagesAsync(2).Flatten();
+      var items = await Context.Channel.GetMessagesAsync(2).FlattenAsync();
       int i = 0;
       foreach (IMessage message in items)
       {

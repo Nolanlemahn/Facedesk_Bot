@@ -58,6 +58,13 @@ namespace FaceDesk_Bot
       typeof(Permissions.GranularPermissionsModule),
     };
 
+    private static DiscordSocketConfig Config = new DiscordSocketConfig()
+    {
+      AlwaysDownloadUsers = true,
+      MessageCacheSize = 500,
+      GuildSubscriptions = true,
+    };
+
     public static string RunningFolder;
 
     public static CommandService MainCommandService;
@@ -93,7 +100,7 @@ namespace FaceDesk_Bot
       string token = File.ReadAllText(Path.Combine(RunningFolder, "nogit_token.txt"));
       Console.WriteLine("Key read.");
 
-      Client = new DiscordSocketClient();
+      Client = new DiscordSocketClient(Config);
       MainCommandService = new CommandService();
 
       _services = new ServiceCollection()
@@ -117,6 +124,12 @@ namespace FaceDesk_Bot
 
       LookupData.Init();
 
+      Client.Ready += () =>
+      {
+        Console.WriteLine("Bot is readied");
+        return Task.CompletedTask;
+      };
+
       await Client.SetGameAsync("dead");
 
       await Task.Delay(-1);
@@ -133,7 +146,7 @@ namespace FaceDesk_Bot
 
       foreach(Type t in EnabledModules)
       {
-        await MainCommandService.AddModuleAsync(t);
+        await MainCommandService.AddModuleAsync(t, null);
       }
     }
 
@@ -157,7 +170,11 @@ namespace FaceDesk_Bot
     private async Task HandleCommandAsync(SocketMessage messageParam)
     {
       var message = messageParam as SocketUserMessage;
-      if (message == null) return;
+      if (message == null)
+      {
+        Console.WriteLine($"A message {messageParam} was null");
+        return;
+      }
       var context = new SocketCommandContext(Client, message);
 
       int argPos = 0;
@@ -193,6 +210,8 @@ namespace FaceDesk_Bot
         bool isAuthed = await GranularPermissionsStorage.GetAuthStatusFor(context.Guild.Id);
         if(!isAuthed)
         {
+          Console.WriteLine(context.Guild.Id + " isn't authed");
+
           // Check for Auth attempt
           string cmd = messageParam.Content.Substring(argPos);
           Match m1 = Regex.Match(cmd, @"(auth )+(\w+)");

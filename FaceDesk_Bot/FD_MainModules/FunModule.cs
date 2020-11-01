@@ -66,7 +66,7 @@ namespace FaceDesk_Bot.FD_MainModules
     {
       SocketUser author = this.Context.Message.Author;
       // Get the question - arbitrarily, question must have been in the previous 10 messages (parsing for politeness)
-      IEnumerable<IMessage> previousMessages = await this.Context.Channel.GetMessagesAsync(10).Flatten();
+      IEnumerable<IMessage> previousMessages = await this.Context.Channel.GetMessagesAsync(10).FlattenAsync();
       List<IMessage> authoredMessages = new List<IMessage>();
 
       foreach (IMessage previousMessage in previousMessages)

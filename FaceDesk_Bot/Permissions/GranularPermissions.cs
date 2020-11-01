@@ -9,6 +9,16 @@ using Google.Cloud.Firestore;
 
 namespace FaceDesk_Bot.Permissions
 {
+  [FirestoreData]
+  class ModassignableRole
+  {
+    [FirestoreProperty]
+    public ulong role { get; set; }
+
+    [FirestoreProperty]
+    public ulong[] mods { get; set; }
+  }
+
   class GranularPermissionsModule : ModuleBase<SocketCommandContext>
   {
     #region auth
@@ -45,6 +55,8 @@ namespace FaceDesk_Bot.Permissions
     #endregion
 
     #region channelmod
+    private static OverwritePermissions BasePermissions = new OverwritePermissions(viewChannel: PermValue.Allow, sendMessages: PermValue.Allow);
+
     [Command("addtochannel")]
     [Alias("atc")]
     [Summary("**Channelmod only**. Adds target user (grants message read/send) to channel.")]
@@ -60,10 +72,11 @@ namespace FaceDesk_Bot.Permissions
         return;
       }
 
-      await channel.AddPermissionOverwriteAsync(user,
-        new OverwritePermissions(readMessages: PermValue.Allow, sendMessages: PermValue.Allow));
+      await channel.AddPermissionOverwriteAsync(user, BasePermissions);
       await this.Context.Message.AddReactionAsync(new Emoji("👌"));
     }
+
+    private static OverwritePermissions RemovePermissions = new OverwritePermissions(viewChannel: PermValue.Deny, sendMessages: PermValue.Deny, manageMessages: PermValue.Allow);
 
     [Command("removefromchannel")]
     [Alias("rfc")]
@@ -80,8 +93,7 @@ namespace FaceDesk_Bot.Permissions
         return;
       }
 
-      await channel.AddPermissionOverwriteAsync(user,
-        new OverwritePermissions(readMessages: PermValue.Deny, sendMessages: PermValue.Deny));
+      await channel.AddPermissionOverwriteAsync(user, RemovePermissions);
       await this.Context.Message.AddReactionAsync(new Emoji("👌"));
     }
 
@@ -99,10 +111,11 @@ namespace FaceDesk_Bot.Permissions
         return;
       }
 
-      if(this.Context.Channel is SocketGuildChannel sgc) await sgc.AddPermissionOverwriteAsync(user,
-        new OverwritePermissions(readMessages: PermValue.Deny, sendMessages: PermValue.Deny));
+      if (this.Context.Channel is SocketGuildChannel sgc) await sgc.AddPermissionOverwriteAsync(user, RemovePermissions);
       await this.Context.Message.AddReactionAsync(new Emoji("👌"));
     }
+
+    private static OverwritePermissions ModPermissions = new OverwritePermissions(viewChannel: PermValue.Allow, sendMessages: PermValue.Allow, manageMessages: PermValue.Allow);
 
     [Command("channelmod")]
     [Alias("cmod")]
@@ -123,8 +136,8 @@ namespace FaceDesk_Bot.Permissions
         update["mods"] = mods;
 
         await channelDoc.SetAsync(update, SetOptions.MergeAll);
-        if (this.Context.Channel is SocketGuildChannel sgc) await sgc.AddPermissionOverwriteAsync(user,
-          new OverwritePermissions(readMessages: PermValue.Allow, sendMessages: PermValue.Allow, manageMessages: PermValue.Allow));
+        if (this.Context.Channel is SocketGuildChannel sgc) await sgc.AddPermissionOverwriteAsync(user, ModPermissions);
+          
         await this.Context.Message.AddReactionAsync(new Emoji("👌"));
       }
       else
@@ -138,6 +151,88 @@ namespace FaceDesk_Bot.Permissions
     }
     #endregion
 
+    #region modassign
+    private async Task<bool> Modtoggle(string code, SocketUser user, bool add)
+    {
+      Dictionary<string, ModassignableRole> massables = await GranularPermissionsStorage.GetModAssignable(this.Context.Guild.Id);
+
+      if (massables.ContainsKey(code)) // valid code
+      {
+        ModassignableRole mrole = massables[code];
+        if (mrole.mods != null && mrole.mods.Contains(this.Context.User.Id)) // invoker is mod
+        {
+          //SocketGuildUser sgu = user as SocketGuildUser;
+          if (user != null)
+          {
+            SocketGuildUser sgu = this.Context.Guild.GetUser(user.Id);
+            SocketRole roleToAssign = this.Context.Guild.Roles.Where(x => x.Id == mrole.role).First();
+
+            if (add) await sgu.AddRoleAsync(roleToAssign);
+            else await sgu.RemoveRoleAsync(roleToAssign);
+
+            return true;
+          }
+        }
+      }
+
+      return false;
+    }
+
+    [Command("modassign")]
+    [Alias("massign")]
+    [Summary("Assign a role by code to a user. Invoker must be a moderator for that code")]
+    public async Task Modassign([Summary("The code of the role")] string code, [Summary("The recipient of the role")] SocketUser user)
+    {
+      if(await Modtoggle(code, user, true))
+      {
+        await this.Context.Message.AddReactionAsync(new Emoji("👌"));
+        return;
+      }
+
+      await this.Context.Message.AddReactionAsync(new Emoji("👎"));
+    }
+
+    [Command("unmodassign")]
+    [Alias("unmassign")]
+    [Summary("Unassign a role by code to a user. Invoker must be a moderator for that code")]
+    public async Task Unmodassign([Summary("The code of the role")] string code, [Summary("The recipient of the role")] SocketUser user)
+    {
+      if (await Modtoggle(code, user, false))
+      {
+        await this.Context.Message.AddReactionAsync(new Emoji("👌"));
+        return;
+      }
+
+      await this.Context.Message.AddReactionAsync(new Emoji("👎"));
+    }
+
+    [Command("modassignable")]
+    [Alias("massable")]
+    [Summary("**Admin only**. (Bot requires Manage Roles.) Mark a role as mod-assignable. If a role isn't specified, the role will be unmarked.")]
+    [RequireUserPermission(GuildPermission.Administrator)]
+    [RequireBotPermission(GuildPermission.ManageRoles)]
+    public async Task MarkModassignable([Summary("The code to add the role as")] string code, [Summary("The role itself")] SocketRole role = null)
+    {
+      bool success = await GranularPermissionsStorage.SetModassignable(this.Context.Guild.Id, code, role);
+
+      if (success) await this.Context.Message.AddReactionAsync(new Emoji("👌"));
+      else await this.Context.Message.AddReactionAsync(new Emoji("👎"));
+    }
+
+    //TODO: these strings are terrible
+    [Command("modassignablemod")]
+    [Alias("massablemod")]
+    [Summary("**Admin only**. (Bot requires Manage Roles.) Make a user a mod for a mod-assignable role.")]
+    [RequireUserPermission(GuildPermission.Administrator)]
+    [RequireBotPermission(GuildPermission.ManageRoles)]
+    public async Task MakeModForModassignable([Summary("The role's code")] string code, [Summary("The user to promote")] SocketUser user)
+    {
+      bool success = await GranularPermissionsStorage.ToggleModassignableMod(this.Context.Guild.Id, code, user.Id);
+
+      if (success) await this.Context.Message.AddReactionAsync(new Emoji("👌"));
+      else await this.Context.Message.AddReactionAsync(new Emoji("👎"));
+    }
+    #endregion
 
     #region selfassign
 
@@ -152,6 +247,16 @@ namespace FaceDesk_Bot.Permissions
 
       if (success) await this.Context.Message.AddReactionAsync(new Emoji("👌"));
       else await this.Context.Message.AddReactionAsync(new Emoji("👎"));
+    }
+
+    [Command("selfassignme")]
+    [Alias("sassme")]
+    [Summary("**(Bot requires Manage Roles.) Attempt to self-assign a role by nothing.")]
+    public async Task SelfassignMe()
+    {
+      // TODO: configurable, random
+      await this.Context.Channel.SendMessageAsync($"{this.Context.Message.Author.Mention}...Your mother eats gym shorts.");
+      return;
     }
 
     [Command("selfassignme")]
@@ -450,6 +555,89 @@ namespace FaceDesk_Bot.Permissions
       }
 
       return selfAssignablesCasted;
+    }
+    #endregion
+
+    #region modassign
+    public static async Task<bool> SetModassignable(ulong guildID, string code, SocketRole role)
+    {
+      try
+      {
+        DocumentReference guildDocument = Db.Document(Convert.ToString(guildID)).Collection("lite").Document("data");
+        DocumentSnapshot guildSnapshot = await guildDocument.GetSnapshotAsync();
+        guildSnapshot.TryGetValue("modAssignable", out Dictionary<string, object> modAssignables);
+
+        if (modAssignables == null) modAssignables = new Dictionary<string, object>();
+
+        if (modAssignables.ContainsKey(code) && role == null)
+        {
+          modAssignables[code] = null;
+        }
+        else modAssignables[code] = new ModassignableRole { role = role.Id };
+
+        Dictionary<string, Dictionary<string, object>> update = new Dictionary<string, Dictionary<string, object>> { ["modAssignable"] = modAssignables };
+        WriteResult wrire = await guildDocument.SetAsync(update, SetOptions.MergeAll);
+
+        return true;
+      }
+      catch(Exception e)
+      {
+        Console.WriteLine(e.Message);
+        return false;
+      }
+    }
+
+    public static async Task<bool> ToggleModassignableMod(ulong guildID, string code, ulong user)
+    {
+      try
+      {
+        Dictionary<string, ModassignableRole> modAssignables = await GetModAssignable(guildID);
+
+        if(modAssignables.ContainsKey(code))
+        {
+          ModassignableRole role = modAssignables[code];
+          if (role.mods == null)
+          {
+            role.mods = new ulong[] {user};
+          }
+          else if(!role.mods.Contains(user))
+          {
+            role.mods = role.mods.Append(user).ToArray();
+          }
+          else if(role.mods.Contains(user))
+          {
+            role.mods = role.mods.Where(x => x != user).ToArray();
+          }
+          modAssignables[code] = role;
+
+          DocumentReference guildDocument = Db.Document(Convert.ToString(guildID)).Collection("lite").Document("data");
+          Dictionary<string, Dictionary<string, ModassignableRole>> update = new Dictionary<string, Dictionary<string, ModassignableRole>> { ["modAssignable"] = modAssignables };
+          WriteResult wrire = await guildDocument.SetAsync(update, SetOptions.MergeAll);
+
+          return true;
+        }
+
+        return false;
+      }
+      catch
+      {
+        return false;
+      }
+    }
+
+    public static async Task<Dictionary<string, ModassignableRole>> GetModAssignable(ulong guildID)
+    {
+      DocumentReference guildDocument = Db.Document(Convert.ToString(guildID)).Collection("lite").Document("data");
+      DocumentSnapshot guildSnapshot = await guildDocument.GetSnapshotAsync();
+
+      Dictionary<string, ModassignableRole> modAssignablesCasted = new Dictionary<string, ModassignableRole>();
+
+      if (!guildSnapshot.TryGetValue("modAssignable", out modAssignablesCasted))
+      {
+        Console.WriteLine("GetModAssignable failed.");
+      }
+
+      return modAssignablesCasted;
     }
     #endregion
 

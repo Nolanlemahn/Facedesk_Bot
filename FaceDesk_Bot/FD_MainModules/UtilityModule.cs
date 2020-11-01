@@ -130,7 +130,7 @@ namespace FaceDesk_Bot.FD_MainModules
       if (Emote.TryParse(reaction, out res))
       {
         Console.WriteLine("Pong");
-        var items = await Context.Channel.GetMessagesAsync(2).Flatten();
+        var items = await Context.Channel.GetMessagesAsync(2).FlattenAsync();
         int i = 0;
         foreach (IMessage message in items)
         {
@@ -184,7 +184,7 @@ namespace FaceDesk_Bot.FD_MainModules
       SocketTextChannel stc = this.Context.Channel as SocketTextChannel;
       if(stc != default)
       {
-        RestInviteMetadata invite = await stc.CreateInviteAsync(
+        IInviteMetadata invite = await stc.CreateInviteAsync(
           86400,
           1,
           false,
@@ -229,8 +229,8 @@ namespace FaceDesk_Bot.FD_MainModules
         }
       }
 
-      var items = await Context.Channel.GetMessagesAsync(delnum + 1).Flatten();
-      await this.Context.Channel.DeleteMessagesAsync(items);
+      var items = await Context.Channel.GetMessagesAsync(delnum + 1).FlattenAsync();
+      await ((ITextChannel) this.Context.Channel).DeleteMessagesAsync(items);
     }
 
     [Command("timezone")]
@@ -319,7 +319,7 @@ namespace FaceDesk_Bot.FD_MainModules
           ebh.AddField(head, body);
         }
 
-        await this.Context.Channel.SendMessageAsync("", false, ebh);
+        await this.Context.Channel.SendMessageAsync("", false, ebh.Build());
       }
     }
 
