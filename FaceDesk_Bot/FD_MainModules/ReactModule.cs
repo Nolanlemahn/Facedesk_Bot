@@ -101,7 +101,7 @@ namespace FaceDesk_Bot.FD_MainModules
     #endregion
 
     #region Word React
-    private async void wreactHelper(string reaction, RestUserMessage rum)
+    private async void wreactHelper(string reaction, IMessage rum)
     {
       reaction = reaction.ToUpper();
 
@@ -136,7 +136,7 @@ namespace FaceDesk_Bot.FD_MainModules
       [Summary("The message")] ulong mid,
       [Summary("The reaction")] string reaction)
     {
-      RestUserMessage rum = await Context.Channel.GetMessageAsync(mid);
+      var rum = await Context.Channel.GetMessageAsync(mid);
       if (rum == null) return;
 
       await Context.Message.DeleteAsync();
@@ -150,7 +150,7 @@ namespace FaceDesk_Bot.FD_MainModules
     public async Task Wreact(
       [Summary("The reaction")] [Remainder] string reaction)
     {
-      RestUserMessage rum = null;
+      IMessage rum = null;
       var items = await Context.Channel.GetMessagesAsync(2).FlattenAsync();
       int i = 0;
       foreach (IMessage message in items)
