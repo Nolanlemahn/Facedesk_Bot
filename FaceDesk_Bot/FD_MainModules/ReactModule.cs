@@ -80,7 +80,7 @@ namespace FaceDesk_Bot.FD_MainModules
       {
         if (i == 1)
         {
-          var msg = await Context.Channel.GetMessageAsync(message.Id) as RestUserMessage;
+          var msg = await Context.Channel.GetMessageAsync(message.Id);
           await msg.AddReactionAsync(res);
           await Context.Message.DeleteAsync();
         }
@@ -94,7 +94,7 @@ namespace FaceDesk_Bot.FD_MainModules
       [Summary("The message")] ulong mid,
       [Summary("The reaction")] string reaction)
     {
-      var msg = await Context.Channel.GetMessageAsync(mid) as RestUserMessage;
+      var msg = await Context.Channel.GetMessageAsync(mid);
       await msg.AddReactionAsync(InterfacedEmoteConstructor(reaction));
       await Context.Message.DeleteAsync();
     }
@@ -136,7 +136,7 @@ namespace FaceDesk_Bot.FD_MainModules
       [Summary("The message")] ulong mid,
       [Summary("The reaction")] string reaction)
     {
-      RestUserMessage rum = await Context.Channel.GetMessageAsync(mid) as RestUserMessage;
+      RestUserMessage rum = await Context.Channel.GetMessageAsync(mid);
       if (rum == null) return;
 
       await Context.Message.DeleteAsync();
@@ -157,7 +157,7 @@ namespace FaceDesk_Bot.FD_MainModules
       {
         if (i == 1)
         {
-          rum = await Context.Channel.GetMessageAsync(message.Id) as RestUserMessage;
+          rum = await Context.Channel.GetMessageAsync(message.Id);
         }
         i++;
       }

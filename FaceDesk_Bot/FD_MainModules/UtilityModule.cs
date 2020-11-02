@@ -136,7 +136,7 @@ namespace FaceDesk_Bot.FD_MainModules
         {
           if (i == 1)
           {
-            var msg = await Context.Channel.GetMessageAsync(message.Id) as RestUserMessage;
+            var msg = await Context.Channel.GetMessageAsync(message.Id);
             await msg.AddReactionAsync(res);
           }
           i++;
