@@ -38,7 +38,7 @@ namespace FaceDesk_Bot.FD_MainModules
       {
         if (i == 1)
         {
-          var msg = await Context.Channel.GetMessageAsync(message.Id) as RestUserMessage;
+          var msg = await Context.Channel.GetMessageAsync(message.Id);
           // for every emoji found, do a blind reaction. (TODO: the above pattern misses some emojis.)
           foreach (var match in Regex.Matches(msg.Content, emojiPattern))
           {
@@ -55,7 +55,7 @@ namespace FaceDesk_Bot.FD_MainModules
     [Summary("Adds a pollreaction to the specified message")]
     public async Task Preact([Summary("The message")] ulong mid)
     {
-      var msg = await Context.Channel.GetMessageAsync(mid) as RestUserMessage;
+      var msg = await Context.Channel.GetMessageAsync(mid);
       
       // for every emoji found, do a blind reaction. (TODO: the above pattern misses some emojis.)
       foreach (var match in Regex.Matches(msg.Content, emojiPattern))
