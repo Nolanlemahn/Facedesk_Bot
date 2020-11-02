@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Discord.Rest;
 using Discord.WebSocket;
 using Google.Cloud.Firestore;
 
@@ -152,7 +153,28 @@ namespace FaceDesk_Bot.Permissions
     #endregion
 
     #region modassign
-    private async Task<bool> Modtoggle(string code, SocketUser user, bool add)
+    private async Task<bool> RoleToggle(IUser user, ulong role)
+    {
+      if (user != null)
+      {
+        RestGuildUser rgu = await Context.Client.Rest.GetGuildUserAsync(this.Context.Guild.Id, user.Id);
+        SocketRole roleToAssign = this.Context.Guild.Roles.Where(x => x.Id == role).First();
+
+        if (rgu.RoleIds.Contains(role))
+        {
+          await rgu.RemoveRoleAsync(roleToAssign);
+        }
+        else
+        {
+          await rgu.AddRoleAsync(roleToAssign);
+        }
+
+        return true;
+      }
+      return false;
+    }
+
+    private async Task<bool> Modtoggle(string code, IUser user)
     {
       Dictionary<string, ModassignableRole> massables = await GranularPermissionsStorage.GetModAssignable(this.Context.Guild.Id);
 
@@ -161,17 +183,7 @@ namespace FaceDesk_Bot.Permissions
         ModassignableRole mrole = massables[code];
         if (mrole.mods != null && mrole.mods.Contains(this.Context.User.Id)) // invoker is mod
         {
-          //SocketGuildUser sgu = user as SocketGuildUser;
-          if (user != null)
-          {
-            SocketGuildUser sgu = this.Context.Guild.GetUser(user.Id);
-            SocketRole roleToAssign = this.Context.Guild.Roles.Where(x => x.Id == mrole.role).First();
-
-            if (add) await sgu.AddRoleAsync(roleToAssign);
-            else await sgu.RemoveRoleAsync(roleToAssign);
-
-            return true;
-          }
+          return await RoleToggle(user, mrole.role);
         }
       }
 
@@ -180,24 +192,11 @@ namespace FaceDesk_Bot.Permissions
 
     [Command("modassign")]
     [Alias("massign")]
-    [Summary("Assign a role by code to a user. Invoker must be a moderator for that code")]
-    public async Task Modassign([Summary("The code of the role")] string code, [Summary("The recipient of the role")] SocketUser user)
+    [Summary("(Un)assign a role by code to a user. Invoker must be a moderator for that code")]
+    public async Task Modassign([Summary("The code of the role")] string code, [Summary("The recipient of the role")] IUser user)
     {
-      if(await Modtoggle(code, user, true))
-      {
-        await this.Context.Message.AddReactionAsync(new Emoji("👌"));
-        return;
-      }
-
-      await this.Context.Message.AddReactionAsync(new Emoji("👎"));
-    }
-
-    [Command("unmodassign")]
-    [Alias("unmassign")]
-    [Summary("Unassign a role by code to a user. Invoker must be a moderator for that code")]
-    public async Task Unmodassign([Summary("The code of the role")] string code, [Summary("The recipient of the role")] SocketUser user)
-    {
-      if (await Modtoggle(code, user, false))
+      Console.WriteLine("massign entered");
+      if(await Modtoggle(code, user))
       {
         await this.Context.Message.AddReactionAsync(new Emoji("👌"));
         return;
@@ -225,7 +224,7 @@ namespace FaceDesk_Bot.Permissions
     [Summary("**Admin only**. (Bot requires Manage Roles.) Make a user a mod for a mod-assignable role.")]
     [RequireUserPermission(GuildPermission.Administrator)]
     [RequireBotPermission(GuildPermission.ManageRoles)]
-    public async Task MakeModForModassignable([Summary("The role's code")] string code, [Summary("The user to promote")] SocketUser user)
+    public async Task MakeModForModassignable([Summary("The role's code")] string code, [Summary("The user to promote")] IGuildUser user)
     {
       bool success = await GranularPermissionsStorage.ToggleModassignableMod(this.Context.Guild.Id, code, user.Id);
 
@@ -269,11 +268,10 @@ namespace FaceDesk_Bot.Permissions
 
       if (sassables != null && sassables.ContainsKey(code))
       {
-        SocketGuildUser sgu = this.Context.User as SocketGuildUser;
-        if (sgu != null)
+        ulong role = this.Context.Guild.Roles.Where(x => x.Id == sassables[code]).First().Id;
+
+        if (await RoleToggle(this.Context.User, role))
         {
-          IEnumerable<SocketRole> rolesToAssign = sgu.Guild.Roles.Where(x => x.Id == sassables[code]);
-          await sgu.AddRolesAsync(rolesToAssign);
           await this.Context.Message.AddReactionAsync(new Emoji("👌"));
           return;
         }
