@@ -195,7 +195,6 @@ namespace FaceDesk_Bot.Permissions
     [Summary("(Un)assign a role by code to a user. Invoker must be a moderator for that code")]
     public async Task Modassign([Summary("The code of the role")] string code, [Summary("The recipient of the role")] IUser user)
     {
-      Console.WriteLine("massign entered");
       if(await Modtoggle(code, user))
       {
         await this.Context.Message.AddReactionAsync(new Emoji("👌"));
