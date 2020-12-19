@@ -255,13 +255,14 @@ namespace FaceDesk_Bot.FD_MainModules
         //static: run all timezones
         if (zones.Equals("REZ"))
         {
-          zones = "";
+          zones = ",";
           foreach (KeyValuePair<string, string> timePair in LookupData.TimeAbs)
           {
             zones += timePair.Key + ",";
           }
-          zones = zones.Replace(origzone + ",", "");
+          zones = zones.Replace("," + origzone + ",", ",");
           zones = zones.TrimEnd(',');
+          zones = zones.TrimStart(',');
         }
         Console.WriteLine(zones);
 
