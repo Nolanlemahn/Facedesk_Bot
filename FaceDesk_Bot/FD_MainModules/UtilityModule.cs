@@ -41,6 +41,7 @@ namespace FaceDesk_Bot.FD_MainModules
       }
     }
 
+    //TODO: This is idiotic
     public static Dictionary<string, string> TimeAbs = new Dictionary<string, string>()
     {
       { "AEST", "E. Australia Standard Time" },
@@ -49,6 +50,7 @@ namespace FaceDesk_Bot.FD_MainModules
       { "CST", "Central Standard Time" },
       { "EST", "Eastern Standard Time" },
       { "GMT", "Greenwich Standard Time" },
+      { "KST", "Korea Standard Time" },
       { "NZST", "New Zealand Standard Time"},
       { "PST", "Pacific Standard Time" },
     };
@@ -241,6 +243,7 @@ namespace FaceDesk_Bot.FD_MainModules
       [Remainder] [Summary("Other timezones, separated by commas")] string zones)
     {
       //try
+      origzone = origzone.ToUpper();
       zones = zones.ToUpper();
       {
         DateTime result;
