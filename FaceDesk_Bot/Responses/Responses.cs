@@ -17,11 +17,13 @@ namespace FaceDesk_Bot.Responses
       if(authed)
       {
         List<ulong> roleIDs = await Permissions.GranularPermissionsStorage.GetDefaultRoles(guild.Id);
+        List<SocketRole> rolesToAssign = new List<SocketRole>();
         if(roleIDs != null) foreach(ulong roleID in roleIDs)
         {
-          IEnumerable<SocketRole> rolesToAssign = joiner.Guild.Roles.Where(x => roleIDs.Contains(x.Id));
-          await joiner.AddRolesAsync(rolesToAssign);
+          IEnumerable<SocketRole> foundRoles = joiner.Guild.Roles.Where(x => roleIDs.Contains(x.Id));
+          rolesToAssign.AddRange(foundRoles);
         }
+        await joiner.AddRolesAsync(rolesToAssign);
       }
     }
 
