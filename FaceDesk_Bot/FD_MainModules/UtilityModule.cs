@@ -106,6 +106,45 @@ namespace FaceDesk_Bot.FD_MainModules
       }
     }
 
+    [Command("whodidntreact")]
+    [Summary("Undocumented")]
+    public async Task WhoDidntReact(
+    [Summary("The message id")] ulong msgid,
+    [Summary("The emoji id")] ulong emojiid)
+    {
+      var message = (RestUserMessage)await this.Context.Channel.GetMessageAsync(msgid);
+      GuildEmote e = await this.Context.Guild.GetEmoteAsync(emojiid);
+      var reacters = await message.GetReactionUsersAsync(e, int.MaxValue).FlattenAsync();
+
+      await this.Context.Guild.DownloadUsersAsync();
+
+      var guildUsers = this.Context.Guild.Users.ToList();
+      foreach(IUser user in reacters)
+      {
+        guildUsers.RemoveAll(m => m.Id == user.Id);
+      }
+
+      string text = "";
+      foreach(var gu in guildUsers)
+      {
+        // here be dragons
+        string newl = $"{gu.Mention}|{gu.Username.Replace("_", "\\_")}#{gu.Discriminator}\n";
+        if((text + newl).Length > 1500)
+        {
+          await this.Context.User.SendMessageAsync(text);
+          text = newl;
+        }
+        else
+        {
+          text += newl;
+        }
+      }
+      if(!string.IsNullOrEmpty(text))
+      {
+        await this.Context.User.SendMessageAsync(text);
+      }
+    }
+
     [Command("medit")]
     [Summary("**Owner only**. Edits a message for which the bot is the author.")]
     public async Task Medit(
